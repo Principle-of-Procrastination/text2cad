@@ -1,0 +1,1553 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SolidWorks FeatureManager Tree API 验证教程</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-2: #eef3f8;
+      --text: #172033;
+      --muted: #5b677a;
+      --subtle: #7a8699;
+      --line: #d9e1ec;
+      --line-strong: #b9c6d7;
+      --accent: #0f7a73;
+      --accent-2: #234f9a;
+      --accent-soft: #e3f5f2;
+      --warn: #9f5f0f;
+      --warn-soft: #fff3df;
+      --ok: #177245;
+      --ok-soft: #e5f6ed;
+      --code-bg: #101828;
+      --code-fg: #e5edf7;
+      --code-muted: #9fb0c7;
+      --shadow: 0 18px 40px rgba(23, 32, 51, 0.08);
+      --radius: 8px;
+      --radius-sm: 6px;
+      --max: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.88), rgba(246,248,251,0.92) 300px),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.6;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: var(--accent-2);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .page-shell {
+      min-height: 100vh;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(217, 225, 236, 0.88);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-inner {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-sm);
+      background: var(--text);
+      color: #fff;
+      flex: 0 0 auto;
+    }
+
+    .brand-title {
+      display: grid;
+      gap: 0;
+      min-width: 0;
+    }
+
+    .brand-title strong {
+      font-size: 14px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-title span {
+      font-size: 12px;
+      line-height: 1.25;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .button {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      min-height: 36px;
+      padding: 8px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 1px 0 rgba(23, 32, 51, 0.04);
+      transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      background: #f9fbfd;
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 8px 22px rgba(15, 122, 115, 0.18);
+    }
+
+    .button.primary:hover {
+      background: #0d6d68;
+    }
+
+    .button svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2;
+    }
+
+    .hero {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 54px 0 28px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 34px;
+      align-items: center;
+    }
+
+    .hero-copy h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(34px, 5vw, 60px);
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    .hero-copy p {
+      margin: 18px 0 0;
+      max-width: 660px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.75;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .result-strip {
+      margin-top: 26px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 720px;
+    }
+
+    .result-item {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.75);
+      border-radius: var(--radius);
+      padding: 14px;
+      min-height: 86px;
+    }
+
+    .result-item b {
+      display: block;
+      font-size: 12px;
+      line-height: 1.25;
+      color: var(--subtle);
+      text-transform: uppercase;
+    }
+
+    .result-item span {
+      display: block;
+      margin-top: 6px;
+      font-size: 15px;
+      font-weight: 720;
+      line-height: 1.35;
+    }
+
+    .model-visual {
+      position: relative;
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+    }
+
+    .cad-stage {
+      position: relative;
+      width: min(100%, 460px);
+      aspect-ratio: 1.18;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(217,225,236,0.42) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(217,225,236,0.42) 1px, transparent 1px),
+        #ffffff;
+      background-size: 28px 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .tree-panel {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      width: 190px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.94);
+      padding: 12px;
+      box-shadow: 0 10px 26px rgba(23,32,51,0.1);
+    }
+
+    .tree-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 760;
+      margin-bottom: 9px;
+    }
+
+    .tree-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      height: 25px;
+      font-size: 12px;
+      color: var(--text);
+      border-radius: 5px;
+      padding: 0 6px;
+    }
+
+    .tree-row.active {
+      background: var(--accent-soft);
+      color: #0b655f;
+      font-weight: 750;
+    }
+
+    .tree-row svg {
+      width: 13px;
+      height: 13px;
+      flex: 0 0 auto;
+    }
+
+    .plate-wrap {
+      position: absolute;
+      right: 32px;
+      bottom: 46px;
+      width: 235px;
+      height: 142px;
+      transform: rotateX(58deg) rotateZ(-29deg);
+      transform-style: preserve-3d;
+      filter: drop-shadow(0 26px 24px rgba(23,32,51,0.22));
+    }
+
+    .plate {
+      position: absolute;
+      inset: 0;
+      border-radius: 7px;
+      background: linear-gradient(145deg, #dce7f5, #9fb2ca);
+      border: 1px solid rgba(92,107,128,0.44);
+      transform: translateZ(16px);
+    }
+
+    .plate::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -16px;
+      height: 16px;
+      border-radius: 0 0 7px 7px;
+      background: linear-gradient(180deg, #879bb6, #65788f);
+      transform-origin: top;
+      transform: rotateX(-90deg);
+    }
+
+    .hole {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 42% 38%, #344051 0 28%, #172033 29% 54%, rgba(255,255,255,0.5) 55% 63%, transparent 64%);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .hole:nth-child(1) { left: 28px; top: 26px; }
+    .hole:nth-child(2) { right: 28px; top: 26px; }
+    .hole:nth-child(3) { left: 28px; bottom: 26px; }
+    .hole:nth-child(4) { right: 28px; bottom: 26px; }
+
+    .callout {
+      position: absolute;
+      right: 20px;
+      top: 26px;
+      width: 196px;
+      border: 1px solid #bfded9;
+      background: rgba(227,245,242,0.94);
+      border-radius: var(--radius);
+      padding: 12px;
+      font-size: 12px;
+      color: #174f4b;
+      box-shadow: 0 12px 28px rgba(15,122,115,0.12);
+    }
+
+    .layout {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 64px;
+      display: grid;
+      grid-template-columns: 244px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .side-nav {
+      position: sticky;
+      top: 86px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.82);
+      padding: 10px;
+      box-shadow: 0 8px 24px rgba(23,32,51,0.05);
+    }
+
+    .side-nav a {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 38px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 660;
+      text-decoration: none;
+    }
+
+    .side-nav a:hover,
+    .side-nav a.is-active {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    .side-nav svg {
+      width: 15px;
+      height: 15px;
+      color: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    main {
+      display: grid;
+      gap: 18px;
+    }
+
+    section {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 8px 28px rgba(23,32,51,0.045);
+      overflow: hidden;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      padding: 22px 24px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff, #fbfcfe);
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .section-head p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 720px;
+    }
+
+    .section-body {
+      padding: 22px 24px 24px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .info-row {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      min-height: 116px;
+      background: #fff;
+    }
+
+    .info-row .icon {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-sm);
+      background: var(--accent-soft);
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .info-row h3 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .info-row p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 12px;
+      counter-reset: step;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: #fff;
+      counter-increment: step;
+    }
+
+    .step-number {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--text);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .step-number::before {
+      content: counter(step);
+    }
+
+    .step h3 {
+      margin: 1px 0 4px;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+
+    .step p,
+    .step li {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .step p {
+      margin: 0;
+    }
+
+    .step ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    .path {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin: 7px 0 0;
+      padding: 7px 9px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    .code-shell {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid #253044;
+      background: var(--code-bg);
+      box-shadow: 0 18px 44px rgba(16,24,40,0.18);
+    }
+
+    .code-toolbar {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 12px;
+      border-bottom: 1px solid #253044;
+      color: var(--code-muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .code-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .traffic {
+      display: flex;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .traffic i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: block;
+      background: #f05d5e;
+    }
+
+    .traffic i:nth-child(2) { background: #e6b450; }
+    .traffic i:nth-child(3) { background: #52c071; }
+
+    .copy-button {
+      border: 1px solid #3a465b;
+      background: #192336;
+      color: var(--code-fg);
+      border-radius: var(--radius-sm);
+      min-height: 30px;
+      padding: 7px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 760;
+      cursor: pointer;
+    }
+
+    .copy-button:hover {
+      background: #202b40;
+    }
+
+    pre {
+      margin: 0;
+      max-height: 640px;
+      overflow: auto;
+      padding: 18px;
+      color: var(--code-fg);
+      font-size: 12.5px;
+      line-height: 1.58;
+      tab-size: 4;
+    }
+
+    code,
+    kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    :not(pre) > code,
+    kbd {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 2px 5px;
+      color: #23304a;
+      font-size: 0.92em;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+    }
+
+    .check-item {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .check-box {
+      width: 19px;
+      height: 19px;
+      border-radius: 5px;
+      border: 1.5px solid var(--accent);
+      background: var(--accent-soft);
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    .check-box svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .check-item strong {
+      display: block;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.4;
+      margin-bottom: 2px;
+    }
+
+    .notice {
+      border-radius: var(--radius);
+      padding: 15px 16px;
+      border: 1px solid #f0d09e;
+      background: var(--warn-soft);
+      color: #66420d;
+      font-size: 14px;
+    }
+
+    .notice.good {
+      border-color: #bce2ce;
+      background: var(--ok-soft);
+      color: #174c31;
+    }
+
+    .trouble-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      overflow: hidden;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 14px 16px;
+      font-size: 14px;
+      font-weight: 760;
+      color: var(--text);
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-right: 2px solid var(--subtle);
+      border-bottom: 2px solid var(--subtle);
+      transform: rotate(45deg);
+      transition: transform 160ms ease;
+      margin-right: 2px;
+      flex: 0 0 auto;
+    }
+
+    details[open] summary::after {
+      transform: rotate(225deg);
+    }
+
+    details p {
+      margin: 0;
+      padding: 0 16px 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .feedback-box {
+      width: 100%;
+      min-height: 210px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfe;
+      padding: 14px;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+    }
+
+    .feedback-box:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15,122,115,0.12);
+    }
+
+    .link-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .source-link {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 13px;
+      background: #fff;
+      min-height: 88px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .source-link span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .source-link strong {
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(16px);
+      opacity: 0;
+      pointer-events: none;
+      border-radius: var(--radius-sm);
+      background: var(--text);
+      color: #fff;
+      padding: 10px 13px;
+      font-size: 13px;
+      font-weight: 680;
+      box-shadow: 0 16px 34px rgba(23,32,51,0.24);
+      transition: opacity 160ms ease, transform 160ms ease;
+      z-index: 50;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .footer {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 0 0 40px;
+      color: var(--subtle);
+      font-size: 12px;
+    }
+
+    @media (max-width: 920px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 36px;
+      }
+
+      .model-visual {
+        min-height: 320px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side-nav {
+        position: relative;
+        top: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-2,
+      .link-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar-inner {
+        width: min(var(--max), calc(100% - 20px));
+      }
+
+      .brand-title span {
+        display: none;
+      }
+
+      .top-actions .button:not(.primary) {
+        display: none;
+      }
+
+      .hero,
+      .layout,
+      .footer {
+        width: min(var(--max), calc(100% - 20px));
+      }
+
+      .hero-copy h1 {
+        font-size: 34px;
+      }
+
+      .result-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head,
+      .section-body {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .side-nav {
+        grid-template-columns: 1fr;
+      }
+
+      .step {
+        grid-template-columns: 1fr;
+      }
+
+      .model-visual {
+        min-height: 300px;
+      }
+
+      .cad-stage {
+        aspect-ratio: 0.94;
+      }
+
+      .tree-panel {
+        width: calc(100% - 36px);
+      }
+
+      .callout {
+        top: 154px;
+        left: 18px;
+        right: 18px;
+        width: auto;
+      }
+
+      .plate-wrap {
+        width: 190px;
+        height: 116px;
+        right: 28px;
+        bottom: 34px;
+      }
+
+      pre {
+        font-size: 11.5px;
+        padding: 14px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .topbar,
+      .side-nav,
+      .copy-button,
+      .hero-actions,
+      .toast {
+        display: none !important;
+      }
+
+      .hero,
+      .layout,
+      .footer {
+        width: 100%;
+      }
+
+      .layout {
+        display: block;
+      }
+
+      section {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+
+      pre {
+        max-height: none;
+        white-space: pre-wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M5 7.5 12 3l7 4.5v8.7L12 21l-7-4.8V7.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M5.5 8 12 12l6.5-4M12 12v8.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="brand-title">
+            <strong>SolidWorks 原生特征树验证</strong>
+            <span>给 Windows + SolidWorks 电脑执行的单页教程</span>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button class="button" type="button" data-copy-target="macro-code">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M8 8h10v12H8z" stroke="currentColor"/><path d="M6 16H4V4h12v2" stroke="currentColor"/></svg>
+            复制宏
+          </button>
+          <button class="button primary" type="button" onclick="window.print()">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M7 8V4h10v4M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v6H7z" stroke="currentColor"/></svg>
+            打印 / 保存 PDF
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <h1 id="page-title">验证 SolidWorks API 能生成原生 FeatureManager Tree</h1>
+        <p>
+          这份教程让朋友在装有 SolidWorks 的 Windows 电脑上运行一个 VBA Macro。
+          成功后，模型不是导入体，而是带有可编辑草图、拉伸和切除特征的 <strong>.SLDPRT</strong>。
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#macro">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M8 17 3 12l5-5M16 7l5 5-5 5M14 4l-4 16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            查看并复制宏代码
+          </a>
+          <a class="button" href="#feedback">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" stroke="currentColor" stroke-linejoin="round"/></svg>
+            复制反馈模板
+          </a>
+        </div>
+        <div class="result-strip" aria-label="验证结果摘要">
+          <div class="result-item">
+            <b>输入</b>
+            <span>一个 VBA Macro</span>
+          </div>
+          <div class="result-item">
+            <b>输出</b>
+            <span>100 x 60 x 8 mm 开孔底板</span>
+          </div>
+          <div class="result-item">
+            <b>判定</b>
+            <span>FeatureManager 中出现原生特征</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="model-visual" aria-hidden="true">
+        <div class="cad-stage">
+          <div class="tree-panel">
+            <div class="tree-title">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16M4 12h16M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              FeatureManager
+            </div>
+            <div class="tree-row"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16v13H4zM8 7V4h8v3" stroke="currentColor"/></svg> Front Plane</div>
+            <div class="tree-row active"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14v10H5zM8 7V5h8v2" stroke="currentColor"/></svg> AI_BasePlate...</div>
+            <div class="tree-row"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7" stroke="currentColor"/><path d="M12 5v14M5 12h14" stroke="currentColor"/></svg> AI_4x_M6...</div>
+            <div class="tree-row"><svg viewBox="0 0 24 24" fill="none"><path d="m5 19 14-14M7 5h12v12" stroke="currentColor"/></svg> Sketches</div>
+          </div>
+          <div class="callout">成功时应看到 Boss-Extrude / Cut-Extrude 这类原生特征，而不是 Imported1。</div>
+          <div class="plate-wrap">
+            <div class="plate">
+              <i class="hole"></i>
+              <i class="hole"></i>
+              <i class="hole"></i>
+              <i class="hole"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <nav class="side-nav" aria-label="页面导航">
+        <a href="#goal" class="is-active">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="currentColor"/><path d="m9 12 2 2 4-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          验证目标
+        </a>
+        <a href="#steps">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          操作步骤
+        </a>
+        <a href="#macro">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M8 17 3 12l5-5M16 7l5 5-5 5M14 4l-4 16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          宏代码
+        </a>
+        <a href="#success">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          成功标准
+        </a>
+        <a href="#trouble">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M10.3 4.3 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          失败排查
+        </a>
+        <a href="#feedback">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" stroke="currentColor" stroke-linejoin="round"/></svg>
+          回传信息
+        </a>
+      </nav>
+
+      <main>
+        <section id="goal">
+          <div class="section-head">
+            <div>
+              <h2>验证目标</h2>
+              <p>这一步只验证 SolidWorks API 能否写入原生建模特征，不验证自然语言或 AI 质量。</p>
+            </div>
+          </div>
+          <div class="section-body">
+            <div class="grid-2">
+              <div class="info-row">
+                <div class="icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16v10H4zM8 7V4h8v3" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+                <h3>要生成的零件</h3>
+                <p>一个 100 x 60 x 8 mm 底板，带 4 个直径 6 mm 的通孔。</p>
+              </div>
+              <div class="info-row">
+                <div class="icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <h3>要看到的结果</h3>
+                <p>FeatureManager 里出现 <code>AI_BasePlate_100x60x8</code> 和 <code>AI_4x_M6_ThroughHoles</code>。</p>
+              </div>
+              <div class="info-row">
+                <div class="icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.8"/></svg></div>
+                <h3>关键判断</h3>
+                <p>右键特征应能 <code>Edit Feature</code>，右键草图应能 <code>Edit Sketch</code>。</p>
+              </div>
+              <div class="info-row">
+                <div class="icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4zM8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <h3>不是这次要验证的东西</h3>
+                <p>不要从 STEP 导入；如果树里只有 <code>Imported1</code>，说明没有验证到原生特征树。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="steps">
+          <div class="section-head">
+            <div>
+              <h2>操作步骤</h2>
+              <p>全程在 SolidWorks 桌面版里完成，不需要 Visual Studio。</p>
+            </div>
+          </div>
+          <div class="section-body">
+            <div class="steps">
+              <div class="step">
+                <div class="step-number"></div>
+                <div>
+                  <h3>打开 SolidWorks</h3>
+                  <p>确认能正常进入主界面，并且当前 license 可用。</p>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number"></div>
+                <div>
+                  <h3>新建一个 Macro</h3>
+                  <p>在菜单里选择：</p>
+                  <div class="path">Tools &gt; Macro &gt; New</div>
+                  <p style="margin-top:8px;">保存为 <code>text2cad_feature_tree_test.swp</code>。</p>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number"></div>
+                <div>
+                  <h3>粘贴宏代码</h3>
+                  <p>VBA 编辑器打开后，清空默认内容，把下面的完整代码复制进去。</p>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number"></div>
+                <div>
+                  <h3>运行 Macro</h3>
+                  <p>点击 VBA 编辑器里的运行按钮，或回到 SolidWorks 选择：</p>
+                  <div class="path">Tools &gt; Macro &gt; Run</div>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-number"></div>
+                <div>
+                  <h3>检查 FeatureManager</h3>
+                  <p>运行成功后，左侧特征树里应该有原生拉伸和切除特征。请截图并按“回传信息”模板反馈。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="macro">
+          <div class="section-head">
+            <div>
+              <h2>VBA Macro 代码</h2>
+              <p>点击右上角复制按钮。粘贴到 SolidWorks VBA Macro 的主模块里运行。</p>
+            </div>
+          </div>
+          <div class="section-body">
+            <div class="notice">
+              这个版本已按实机验证结果更新：优先选择中文 <code>前视基准面</code>，失败后遍历特征树选择第一个基准面；孔切除方向也已修正。
+            </div>
+            <div class="code-shell" style="margin-top:14px;">
+              <div class="code-toolbar">
+                <div class="code-title">
+                  <span class="traffic"><i></i><i></i><i></i></span>
+                  <span>text2cad_feature_tree_test.swp</span>
+                </div>
+                <button class="copy-button" type="button" data-copy-target="macro-code">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none"><path d="M8 8h10v12H8z" stroke="currentColor"/><path d="M6 16H4V4h12v2" stroke="currentColor"/></svg>
+                  复制代码
+                </button>
+              </div>
+<pre><code id="macro-code">Option Explicit
+
+Dim swApp As SldWorks.SldWorks
+Dim swModel As SldWorks.ModelDoc2
+Dim swFeat As SldWorks.Feature
+Dim ok As Boolean
+
+Const MM As Double = 0.001
+
+Sub main()
+
+    Set swApp = Application.SldWorks
+
+    Dim templatePath As String
+    templatePath = swApp.GetUserPreferenceStringValue(swUserPreferenceStringValue_e.swDefaultTemplatePart)
+
+    If templatePath = "" Then
+        MsgBox "No default part template found. Please set a default Part template in SOLIDWORKS."
+        Exit Sub
+    End If
+
+    Set swModel = swApp.NewDocument(templatePath, 0, 0, 0)
+
+    If swModel Is Nothing Then
+        MsgBox "Failed to create new part document."
+        Exit Sub
+    End If
+
+    swModel.ClearSelection2 True
+
+    ' 1) Create base sketch on Front Plane
+    ok = SelectFrontPlane()
+    If Not ok Then
+        MsgBox "Failed to select Front Plane. If your SOLIDWORKS UI is localized, update the plane name in SelectFrontPlane()."
+        Exit Sub
+    End If
+
+    swModel.SketchManager.InsertSketch True
+    swModel.SketchManager.CreateCenterRectangle 0, 0, 0, 50 * MM, 30 * MM, 0
+
+    Set swFeat = swModel.FeatureManager.FeatureExtrusion3( _
+        True, False, False, _
+        swEndCondBlind, 0, _
+        8 * MM, 0, _
+        False, False, False, False, _
+        0, 0, _
+        False, False, False, False, _
+        True, True, True, _
+        swStartSketchPlane, 0, False)
+
+    If swFeat Is Nothing Then
+        MsgBox "Failed to create base extrude."
+        Exit Sub
+    End If
+
+    swFeat.Name = "AI_BasePlate_100x60x8"
+
+    swModel.ClearSelection2 True
+
+    ' 2) Create four hole circles on the same plane
+    ok = SelectFrontPlane()
+    If Not ok Then
+        MsgBox "Failed to select Front Plane for holes."
+        Exit Sub
+    End If
+
+    swModel.SketchManager.InsertSketch True
+
+    swModel.SketchManager.CreateCircleByRadius 40 * MM, 20 * MM, 0, 3 * MM
+    swModel.SketchManager.CreateCircleByRadius -40 * MM, 20 * MM, 0, 3 * MM
+    swModel.SketchManager.CreateCircleByRadius 40 * MM, -20 * MM, 0, 3 * MM
+    swModel.SketchManager.CreateCircleByRadius -40 * MM, -20 * MM, 0, 3 * MM
+
+    Set swFeat = swModel.FeatureManager.FeatureCut4( _
+        False, False, False, _
+        swEndCondThroughAll, 0, _
+        10 * MM, 10 * MM, _
+        False, False, False, False, _
+        0, 0, _
+        False, False, False, False, _
+        False, True, True, True, True, False, _
+        swStartSketchPlane, 0, False, False)
+
+    If swFeat Is Nothing Then
+        MsgBox "Failed to create hole cut."
+        Exit Sub
+    End If
+
+    swFeat.Name = "AI_4x_M6_ThroughHoles"
+
+    swModel.EditRebuild3
+    swModel.ViewZoomtofit2
+
+    DumpFeatureTree
+
+    MsgBox "Done. Check the FeatureManager tree: native Boss-Extrude and Cut-Extrude features should exist."
+
+End Sub
+
+Function SelectFrontPlane() As Boolean
+    ' Ensure the document is active and selection state is clean.
+    swApp.ActivateDoc swModel.GetTitle
+    swModel.EditRebuild3
+    swModel.ClearSelection2 True
+
+    ' Method 1: select the localized default front plane by name.
+    If swModel.Extension.SelectByID2("前视基准面", "PLANE", 0, 0, 0, False, 0, Nothing, 0) Then
+        SelectFrontPlane = True
+        Exit Function
+    End If
+
+    ' Method 2: fall back to the first plane in the feature tree.
+    Dim swFeat As SldWorks.Feature
+    Set swFeat = swModel.FirstFeature
+    Do While Not swFeat Is Nothing
+        If swFeat.GetTypeName2 = "Plane" Then
+            If swFeat.Select2(False, 0) Then
+                SelectFrontPlane = True
+                Exit Function
+            End If
+        End If
+        Set swFeat = swFeat.GetNextFeature
+    Loop
+
+    SelectFrontPlane = False
+End Function
+
+Sub DumpFeatureTree()
+    Dim f As SldWorks.Feature
+    Set f = swModel.FirstFeature
+
+    Debug.Print "---- FeatureManager Tree ----"
+
+    Do While Not f Is Nothing
+        Debug.Print f.Name & " | " & f.GetTypeName2
+        Set f = f.GetNextFeature
+    Loop
+End Sub</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="success">
+          <div class="section-head">
+            <div>
+              <h2>成功标准</h2>
+              <p>只要下面几项成立，就说明 SolidWorks API 路线可以保留原生特征树。</p>
+            </div>
+          </div>
+          <div class="section-body">
+            <div class="checklist">
+              <div class="check-item">
+                <span class="check-box"><svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div><strong>FeatureManager 出现命名特征</strong>能看到 <code>AI_BasePlate_100x60x8</code> 和 <code>AI_4x_M6_ThroughHoles</code>。</div>
+              </div>
+              <div class="check-item">
+                <span class="check-box"><svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div><strong>不是 Imported Body</strong>树里不应该只有 <code>Imported1</code>、<code>Imported2</code> 这种导入体。</div>
+              </div>
+              <div class="check-item">
+                <span class="check-box"><svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div><strong>特征可以编辑</strong>右键 <code>AI_BasePlate_100x60x8</code> 应该能看到 <code>Edit Feature</code>。</div>
+              </div>
+              <div class="check-item">
+                <span class="check-box"><svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div><strong>草图可以编辑</strong>右键孔对应的 sketch，进入 <code>Edit Sketch</code> 后能看到 4 个圆。</div>
+              </div>
+              <div class="check-item">
+                <span class="check-box"><svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div><strong>文件可以保存和重开</strong>保存为 <code>.SLDPRT</code> 后重新打开，特征树仍然存在。</div>
+              </div>
+            </div>
+            <div class="notice good" style="margin-top:14px;">
+              如果这些都通过，后续产品可以走“自然语言 → 结构化 feature plan → SolidWorks API 执行 → .SLDPRT 原生特征树”的路线。
+            </div>
+          </div>
+        </section>
+
+        <section id="trouble">
+          <div class="section-head">
+            <div>
+              <h2>失败排查</h2>
+              <p>优先看报错信息和 FeatureManager 结果，不要先改建模逻辑。</p>
+            </div>
+          </div>
+          <div class="section-body">
+            <div class="trouble-list">
+              <details open>
+                <summary>提示找不到 Front Plane</summary>
+                <p>当前宏会先选 <code>"前视基准面"</code>，再遍历特征树选择第一个 <code>Plane</code>。如果仍失败，请把 <code>SelectFrontPlane()</code> 里的名称改成左侧树显示的实际基准面名称，或反馈完整特征树截图。</p>
+              </details>
+              <details>
+                <summary>编译报 User-defined type not defined</summary>
+                <p>在 VBA 编辑器里打开 <code>Tools &gt; References</code>，勾选当前版本的 <code>SOLIDWORKS type library</code>，然后重新运行。</p>
+              </details>
+              <details>
+                <summary>没有默认 Part Template</summary>
+                <p>报 <code>No default part template found</code> 时，在 SolidWorks 设置里配置默认 Part template，或先手动新建一个 Part 再运行改造版宏。</p>
+              </details>
+              <details>
+                <summary>FeatureManager 里只有 Imported1</summary>
+                <p>这说明走了 STEP 导入或其他导入流程，不是这次 API 建模验证。请重新按本页 Macro 路线运行。</p>
+              </details>
+              <details>
+                <summary>孔没有切穿或方向不对</summary>
+                <p>这次实测把 <code>FeatureCut4</code> 的第一个参数从 <code>True</code> 改为 <code>False</code> 后可行。产品化时切除方向需要由执行器根据草图平面、实体方向和预期布尔结果自动判断。</p>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <section id="feedback">
+          <div class="section-head">
+            <div>
+              <h2>回传信息</h2>
+              <p>运行后把下面模板填一下，最好附 FeatureManager 截图和保存后的 .SLDPRT 文件。</p>
+            </div>
+            <button class="button" type="button" data-copy-target="feedback-template">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M8 8h10v12H8z" stroke="currentColor"/><path d="M6 16H4V4h12v2" stroke="currentColor"/></svg>
+              复制模板
+            </button>
+          </div>
+          <div class="section-body">
+            <textarea id="feedback-template" class="feedback-box" spellcheck="false">SolidWorks 原生特征树验证反馈
+
+1. SolidWorks 版本：
+2. Windows 版本：
+3. Macro 是否运行成功：是 / 否
+4. 是否生成了 100 x 60 x 8 mm 底板：是 / 否
+5. FeatureManager 里是否看到 AI_BasePlate_100x60x8：是 / 否
+6. FeatureManager 里是否看到 AI_4x_M6_ThroughHoles：是 / 否
+7. 右键 AI_BasePlate_100x60x8 是否能 Edit Feature：是 / 否
+8. 右键孔 sketch 是否能 Edit Sketch：是 / 否
+9. 保存并重新打开 .SLDPRT 后特征树是否还在：是 / 否
+10. 是否出现 Imported1：是 / 否
+11. 如失败，报错原文：
+12. 附件：FeatureManager 截图 / .SLDPRT 文件</textarea>
+          </div>
+        </section>
+
+        <section id="references">
+          <div class="section-head">
+            <div>
+              <h2>官方参考</h2>
+              <p>需要确认 API 名称或 SolidWorks 行为时，优先看官方文档。</p>
+            </div>
+          </div>
+          <div class="section-body">
+            <div class="link-grid">
+              <a class="source-link" href="https://help.solidworks.com/2024/english/api/sldworksapiprogguide/GettingStarted/SolidWorks_API_Getting_Started_Overview.htm" target="_blank" rel="noreferrer">
+                <strong>SOLIDWORKS API Getting Started</strong>
+                <span>宏、API 和开发入口</span>
+              </a>
+              <a class="source-link" href="https://help.solidworks.com/2024/english/solidworks/sldworks/c_featuremanager_design_tree.htm" target="_blank" rel="noreferrer">
+                <strong>FeatureManager Design Tree</strong>
+                <span>特征树的官方概念说明</span>
+              </a>
+              <a class="source-link" href="https://help.solidworks.com/2023/english/api/sldworksapi/solidworks.interop.sldworks~solidworks.interop.sldworks.ifeaturemanager~featurecut4.html" target="_blank" rel="noreferrer">
+                <strong>IFeatureManager.FeatureCut4</strong>
+                <span>创建 Cut-Extrude 特征的 API</span>
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="footer">
+      单文件离线页。建议直接双击打开，或发给对方后让对方在浏览器中打开。
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">已复制</div>
+
+  <script>
+    const toast = document.getElementById("toast");
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1500);
+    }
+
+    function getTextFromTarget(id) {
+      const target = document.getElementById(id);
+      if (!target) return "";
+      if (target.tagName === "TEXTAREA" || target.tagName === "INPUT") return target.value;
+      return target.textContent;
+    }
+
+    function fallbackCopyText(text) {
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      document.body.removeChild(area);
+    }
+
+    async function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return;
+        } catch (error) {
+          fallbackCopyText(text);
+          return;
+        }
+      }
+
+      fallbackCopyText(text);
+    }
+
+    document.querySelectorAll("[data-copy-target]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const targetId = button.getAttribute("data-copy-target");
+        const text = getTextFromTarget(targetId);
+
+        try {
+          await copyText(text);
+          showToast(targetId === "macro-code" ? "宏代码已复制" : "模板已复制");
+        } catch (error) {
+          showToast("复制失败，请手动选择复制");
+        }
+      });
+    });
+
+    const navLinks = Array.from(document.querySelectorAll(".side-nav a"));
+    const sections = navLinks
+      .map((link) => document.querySelector(link.getAttribute("href")))
+      .filter(Boolean);
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+      if (!visible) return;
+
+      navLinks.forEach((link) => {
+        link.classList.toggle("is-active", link.getAttribute("href") === "#" + visible.target.id);
+      });
+    }, {
+      rootMargin: "-20% 0px -65% 0px",
+      threshold: [0.1, 0.25, 0.5]
+    });
+
+    sections.forEach((section) => observer.observe(section));
+  </script>
+</body>
+</html>
