@@ -1,0 +1,17 @@
+# Visual Studio / MSBuild build output
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+
+# SolidWorks interop DLLs are copied locally per machine (proprietary, version-specific)
+src/SwCopilot/third-party/*.dll
+
+# Inno Setup output
+[Oo]utput/
+*-Setup.exe
+
+# OS junk
+.DS_Store
+Thumbs.db
