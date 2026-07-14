@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Text2CAD 2026 产品与工程执行计划">
+  <title>Text2CAD — 2026 产品执行计划</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #5f6b7a;
+      --paper: #f4f7fb;
+      --card: #ffffff;
+      --line: #dce3ed;
+      --blue: #1769e0;
+      --blue-soft: #e9f2ff;
+      --green: #12805c;
+      --green-soft: #e8f7f1;
+      --amber: #a45b00;
+      --amber-soft: #fff3dc;
+      --red: #b72d3b;
+      --red-soft: #fff0f2;
+      --shadow: 0 14px 40px rgba(31, 47, 71, .09);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(23, 105, 224, .10), transparent 34rem),
+        radial-gradient(circle at 94% 18%, rgba(18, 128, 92, .09), transparent 30rem),
+        var(--paper);
+      font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+
+    a { color: var(--blue); }
+    code { font-family: "Cascadia Code", Consolas, monospace; }
+
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(220, 227, 237, .9);
+      background: rgba(244, 247, 251, .88);
+      backdrop-filter: blur(14px);
+    }
+    .topbar .shell {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; }
+    .mark {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: grid; place-items: center;
+      color: white; background: linear-gradient(135deg, var(--blue), #7247d8);
+      box-shadow: 0 8px 20px rgba(23, 105, 224, .24);
+    }
+    nav { display: flex; gap: 18px; flex-wrap: wrap; }
+    nav a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 650; }
+    nav a:hover { color: var(--blue); }
+
+    main { padding: 58px 0 80px; }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.35fr .65fr;
+      gap: 28px;
+      align-items: stretch;
+      margin-bottom: 28px;
+    }
+    .hero-main, .hero-side, .card {
+      background: var(--card);
+      border: 1px solid rgba(220, 227, 237, .9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .hero-main { padding: 46px; overflow: hidden; position: relative; }
+    .hero-main::after {
+      content: "";
+      position: absolute;
+      right: -90px; bottom: -120px;
+      width: 310px; height: 310px; border-radius: 50%;
+      background: linear-gradient(135deg, rgba(23, 105, 224, .14), rgba(18, 128, 92, .10));
+    }
+    .eyebrow { color: var(--blue); text-transform: uppercase; letter-spacing: .13em; font-size: 12px; font-weight: 850; }
+    h1 { max-width: 760px; margin: 12px 0 14px; font-size: clamp(38px, 5vw, 66px); line-height: 1.04; letter-spacing: -.045em; }
+    .lead { max-width: 780px; margin: 0; color: var(--muted); font-size: 19px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 28px; position: relative; z-index: 1; }
+    .chip, .tag {
+      display: inline-flex; align-items: center; gap: 7px;
+      border-radius: 999px; padding: 7px 11px;
+      background: var(--blue-soft); color: #164e9f; font-size: 12px; font-weight: 750;
+    }
+    .tag.green { background: var(--green-soft); color: var(--green); }
+    .tag.amber { background: var(--amber-soft); color: var(--amber); }
+    .tag.red { background: var(--red-soft); color: var(--red); }
+
+    .hero-side { padding: 28px; display: flex; flex-direction: column; justify-content: space-between; }
+    .status-title { font-size: 13px; color: var(--muted); font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
+    .status-big { margin: 10px 0 20px; font-size: 28px; line-height: 1.2; font-weight: 850; }
+    .fact { padding: 14px 0; border-top: 1px solid var(--line); }
+    .fact b { display: block; font-size: 13px; }
+    .fact span { color: var(--muted); font-size: 13px; }
+
+    section { margin-top: 28px; scroll-margin-top: 84px; }
+    .section-head { margin: 0 0 16px; display: flex; align-items: end; justify-content: space-between; gap: 20px; }
+    .section-head h2 { margin: 3px 0 0; font-size: 28px; line-height: 1.15; letter-spacing: -.02em; }
+    .section-head p { margin: 0; max-width: 620px; color: var(--muted); }
+    .kicker { color: var(--blue); font-size: 12px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+    .card { padding: 28px; }
+
+    .baseline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .baseline .card { box-shadow: none; }
+    .metric { font-size: 28px; font-weight: 850; line-height: 1.15; }
+    .metric-label { color: var(--muted); font-size: 13px; margin-top: 7px; }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: 1fr 150px 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+    .runtime { border: 1px solid var(--line); border-radius: 16px; padding: 24px; background: #fbfcfe; }
+    .runtime h3 { margin: 8px 0 8px; font-size: 22px; }
+    .runtime p { color: var(--muted); margin: 0 0 16px; }
+    .runtime ul { padding-left: 18px; margin: 0; }
+    .runtime li { margin: 7px 0; }
+    .bridge { display: grid; place-items: center; text-align: center; color: var(--muted); font-size: 13px; font-weight: 750; }
+    .bridge-line { width: 100%; height: 2px; margin: 10px 0; background: linear-gradient(90deg, var(--blue), var(--green)); position: relative; }
+    .bridge-line::before, .bridge-line::after { content: ""; position: absolute; top: -4px; width: 9px; height: 9px; border: solid currentColor; border-width: 2px 2px 0 0; }
+    .bridge-line::before { left: 2px; transform: rotate(-135deg); color: var(--blue); }
+    .bridge-line::after { right: 2px; transform: rotate(45deg); color: var(--green); }
+
+    .flow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+    .flow-step { padding: 18px 14px; border-radius: 14px; border: 1px solid var(--line); background: #fbfcfe; }
+    .num { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; color: white; background: var(--blue); font-size: 12px; font-weight: 850; }
+    .flow-step h3 { margin: 13px 0 6px; font-size: 15px; }
+    .flow-step p { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .decisions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .decision { border-left: 4px solid var(--blue); }
+    .decision:nth-child(2) { border-color: var(--green); }
+    .decision:nth-child(3) { border-color: #7247d8; }
+    .decision h3 { margin: 0 0 8px; font-size: 18px; }
+    .decision p { margin: 0; color: var(--muted); }
+
+    .roadmap { display: grid; gap: 12px; }
+    .phase {
+      display: grid; grid-template-columns: 90px 1fr 180px; gap: 20px; align-items: start;
+      padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: #fbfcfe;
+    }
+    .phase-id { color: var(--blue); font-size: 24px; font-weight: 900; }
+    .phase h3 { margin: 0 0 6px; }
+    .phase p { margin: 0; color: var(--muted); }
+    .gate { color: var(--green); background: var(--green-soft); padding: 9px 12px; border-radius: 10px; font-size: 12px; font-weight: 750; }
+
+    .gates, .risks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .check { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; }
+    .check-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--green-soft); color: var(--green); font-weight: 900; }
+    .check h3, .risk h3 { margin: 0 0 4px; font-size: 16px; }
+    .check p, .risk p { margin: 0; color: var(--muted); font-size: 13px; }
+    .risk { border-top: 4px solid var(--amber); }
+
+    .next { background: linear-gradient(135deg, #102e57, #143f67 58%, #11614f); color: white; }
+    .next h2 { margin: 0 0 10px; font-size: 30px; }
+    .next p { color: rgba(255,255,255,.78); }
+    .next ol { margin: 22px 0 0; padding-left: 22px; columns: 2; column-gap: 44px; }
+    .next li { margin: 0 0 12px; break-inside: avoid; }
+
+    .sources { color: var(--muted); font-size: 13px; }
+    .sources ul { margin-bottom: 0; }
+    footer { padding: 28px 0 52px; color: var(--muted); text-align: center; font-size: 12px; }
+
+    @media (max-width: 950px) {
+      .hero, .architecture { grid-template-columns: 1fr; }
+      .bridge { min-height: 90px; }
+      .bridge-line { width: 2px; height: 54px; background: linear-gradient(var(--blue), var(--green)); }
+      .bridge-line::before, .bridge-line::after { display: none; }
+      .baseline, .flow { grid-template-columns: repeat(2, 1fr); }
+      .decisions { grid-template-columns: 1fr; }
+      .phase { grid-template-columns: 70px 1fr; }
+      .gate { grid-column: 2; }
+    }
+    @media (max-width: 650px) {
+      .shell { width: min(100% - 20px, 1180px); }
+      nav { display: none; }
+      main { padding-top: 24px; }
+      .hero-main { padding: 30px 24px; }
+      .hero-side, .card { padding: 22px; }
+      h1 { font-size: 40px; }
+      .baseline, .flow, .gates, .risks { grid-template-columns: 1fr; }
+      .section-head { align-items: start; flex-direction: column; }
+      .phase { grid-template-columns: 1fr; gap: 8px; }
+      .gate { grid-column: auto; }
+      .next ol { columns: 1; }
+    }
+    @media print {
+      body { background: white; }
+      .topbar { position: static; }
+      .card, .hero-main, .hero-side { box-shadow: none; break-inside: avoid; }
+      main { padding-top: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell">
+      <div class="brand"><span class="mark">T</span><span>Text2CAD · 2026</span></div>
+      <nav aria-label="页内导航">
+        <a href="#baseline">基线</a>
+        <a href="#architecture">架构</a>
+        <a href="#safety">安全闭环</a>
+        <a href="#roadmap">路线</a>
+        <a href="#gates">验收</a>
+        <a href="#next">下一步</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="hero">
+      <section class="hero-main">
+        <div class="eyebrow">Product execution plan · reset 2026-07-13</div>
+        <h1>让 AI 安全地修改原生 CAD，而不是只生成一个形状</h1>
+        <p class="lead">Text2CAD 把用户意图和 SOLIDWORKS 上下文编译成受控 Execution Plan。用户预览并确认后，本地确定性执行器才修改原生、可继续编辑的特征树。</p>
+        <div class="chips">
+          <span class="chip">SOLIDWORKS 2025–2026</span>
+          <span class="chip">Visual Studio 2026</span>
+          <span class="chip">.NET Framework 4.8 Add-in</span>
+          <span class="chip">.NET 10 LTS Host</span>
+          <span class="chip">Native Feature Tree</span>
+        </div>
+      </section>
+
+      <aside class="hero-side">
+        <div>
+          <div class="status-title">当前状态</div>
+          <div class="status-big">从零重建<br>架构基线已确定</div>
+          <span class="tag green">Research → M0</span>
+        </div>
+        <div>
+          <div class="fact"><b>旧代码</b><span>仅作预研证据，不作为新实现基础</span></div>
+          <div class="fact"><b>第一目标</b><span>先证明安全执行闭环，再接 LLM</span></div>
+          <div class="fact"><b>产品范围</b><span>由真实工作流和用户研究决定</span></div>
+        </div>
+      </aside>
+    </div>
+
+    <section id="baseline">
+      <div class="section-head">
+        <div><div class="kicker">01 · Baseline</div><h2>2026 技术基线</h2></div>
+        <p>“使用最新”不是把所有代码塞进最新运行时，而是在宿主支持边界内采用当前稳定方案。</p>
+      </div>
+      <div class="baseline">
+        <div class="card"><div class="metric">Windows 11</div><div class="metric-label">唯一开发与真机验证平台 · x64</div></div>
+        <div class="card"><div class="metric">SW 2025+</div><div class="metric-label">2025 最低基线 · 2026 兼容回归</div></div>
+        <div class="card"><div class="metric">.NET 4.8</div><div class="metric-label">薄 Add-in · 两代共同目标</div></div>
+        <div class="card"><div class="metric">.NET 10 LTS</div><div class="metric-label">Host · Planner、AI 与产品逻辑</div></div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <div class="section-head">
+        <div><div class="kicker">02 · Architecture</div><h2>双进程、双运行时</h2></div>
+        <p>COM 对象永远留在 SOLIDWORKS 进程内；跨边界只传版本化数据。</p>
+      </div>
+      <div class="card architecture">
+        <article class="runtime">
+          <span class="tag">SLDWORKS.exe</span>
+          <h3>Text2Cad.Addin</h3>
+          <p>C# · .NET Framework 4.8 · x64</p>
+          <ul>
+            <li><code>ISwAddin</code>、Task Pane 与事件</li>
+            <li>文档、特征树和选择快照</li>
+            <li>唯一的串行 COM Dispatcher</li>
+            <li>最终计划校验与确定性 Executor</li>
+            <li>Rebuild、后置验证和 Undo 恢复</li>
+          </ul>
+        </article>
+        <div class="bridge">
+          <span>Named Pipe</span>
+          <div class="bridge-line"></div>
+          <span>JSON DTO<br>无 COM / 无代码</span>
+        </div>
+        <article class="runtime">
+          <span class="tag green">Text2Cad.Host.exe</span>
+          <h3>AI 产品层</h3>
+          <p>C# · .NET 10 LTS · x64</p>
+          <ul>
+            <li>会话、澄清和上下文压缩</li>
+            <li>可替换的 LLM provider</li>
+            <li>Planner 与语义 IR 编译</li>
+            <li>Schema、策略和第一层校验</li>
+            <li>日志、审计和回归语料</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div><div class="kicker">03 · Decisions</div><h2>不可轻易回退的决策</h2></div>
+      </div>
+      <div class="decisions">
+        <article class="card decision"><h3>LLM 不执行代码</h3><p>模型只产生白名单语义 capability。禁止输出并执行 C#、VBA、宏或原始 SOLIDWORKS API。</p></article>
+        <article class="card decision"><h3>计划绑定文档 revision</h3><p>用户确认不可变 plan hash。预览后文档或选择变化时，旧计划立即失效。</p></article>
+        <article class="card decision"><h3>原生特征才算完成</h3><p>结果必须可 Edit Sketch、Edit Feature、Rebuild、保存并重开；Imported Body 不通过验收。</p></article>
+      </div>
+    </section>
+
+    <section id="safety">
+      <div class="section-head">
+        <div><div class="kicker">04 · Safety loop</div><h2>安全执行闭环</h2></div>
+        <p>每一层都可拒绝请求；确认不是一颗跳过校验的“执行”按钮。</p>
+      </div>
+      <div class="card flow">
+        <article class="flow-step"><span class="num">1</span><h3>Snapshot</h3><p>读取文档、配置、单位、特征图和选择稳定引用。</p></article>
+        <article class="flow-step"><span class="num">2</span><h3>Plan</h3><p>Host 生成版本化、显式单位的语义计划。</p></article>
+        <article class="flow-step"><span class="num">3</span><h3>Validate</h3><p>Add-in 复核 schema、capability、范围和 revision。</p></article>
+        <article class="flow-step"><span class="num">4</span><h3>Preview</h3><p>展示新增/修改、before/after、依赖与风险。</p></article>
+        <article class="flow-step"><span class="num">5</span><h3>Execute</h3><p>确认 plan hash 后，在 Undo Object 中串行执行。</p></article>
+        <article class="flow-step"><span class="num">6</span><h3>Verify</h3><p>Rebuild 与后置条件全过才成功，否则恢复并诊断。</p></article>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="section-head">
+        <div><div class="kicker">05 · Roadmap</div><h2>阶段路线</h2></div>
+        <p>安装板只作为 golden fixture；用户研究和产品场景选择与技术底座并行。</p>
+      </div>
+      <div class="card roadmap">
+        <article class="phase"><div class="phase-id">M0</div><div><h3>平台底座</h3><p>新 Solution、Add-in/Host 生命周期、Named Pipe、快照、COM Dispatcher、结构化日志。</p></div><div class="gate">Gate：断线与重载稳定</div></article>
+        <article class="phase"><div class="phase-id">M1</div><div><h3>确定性 CAD 闭环</h3><p>手写 IR 创建原生板/孔并增量改尺寸；具备 preview、confirm、revision、Undo 和 postcondition。</p></div><div class="gate">Gate：保存重开仍可编辑</div></article>
+        <article class="phase"><div class="phase-id">M2</div><div><h3>规则 Planner</h3><p>模板化覆盖一组窄意图，完善单位、缺参、澄清、不支持与边界策略。</p></div><div class="gate">Gate：golden cases 可重复</div></article>
+        <article class="phase"><div class="phase-id">M3</div><div><h3>LLM Planner</h3><p>结构化输出、provider adapter、shadow mode 与 prompt 回归；只开放低风险 capability。</p></div><div class="gate">Gate：离线评测达标</div></article>
+        <article class="phase"><div class="phase-id">M4</div><div><h3>产品化</h3><p>场景聚焦、兼容矩阵、签名安装、更新、审计、企业数据策略与故障恢复。</p></div><div class="gate">Gate：用户价值与交付成立</div></article>
+      </div>
+    </section>
+
+    <section id="gates">
+      <div class="section-head">
+        <div><div class="kicker">06 · MVP gates</div><h2>MVP 必须通过</h2></div>
+      </div>
+      <div class="gates">
+        <article class="card check"><span class="check-icon">✓</span><div><h3>宿主隔离</h3><p>Host 崩溃或断线时，SOLIDWORKS 仍稳定可用。</p></div></article>
+        <article class="card check"><span class="check-icon">✓</span><div><h3>非法计划无法触达 COM</h3><p>未知 operation、非法单位、越界数值和跨文档引用在执行前被拒绝。</p></div></article>
+        <article class="card check"><span class="check-icon">✓</span><div><h3>确认具有一致性</h3><p>用户确认 plan hash；document revision 改变会阻止旧计划执行。</p></div></article>
+        <article class="card check"><span class="check-icon">✓</span><div><h3>结果原生且可编辑</h3><p>保存并重开后，草图、尺寸和特征仍能编辑并成功重建。</p></div></article>
+        <article class="card check"><span class="check-icon">✓</span><div><h3>失败可诊断</h3><p>任何步骤失败都有操作级证据、结构化错误和 correlation ID。</p></div></article>
+        <article class="card check"><span class="check-icon">✓</span><div><h3>恢复可验证</h3><p>失败后证明已恢复执行前状态；否则明确要求人工检查。</p></div></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div><div class="kicker">07 · Risks</div><h2>核心风险</h2></div>
+      </div>
+      <div class="risks">
+        <article class="card risk"><h3>SOLIDWORKS API 与拓扑脆弱性</h3><p>用持久引用、类型/拓扑预期、真机 golden models 和版本矩阵控制；不依赖显示名称。</p></article>
+        <article class="card risk"><h3>把演示误当产品</h3><p>板和孔只是工程 fixture；首个市场工作流必须经用户访谈、频率、风险和付费意愿验证。</p></article>
+        <article class="card risk"><h3>LLM 幻觉越过安全边界</h3><p>模型无执行权；双层 validator、capability registry、显式单位和模糊测试构成硬边界。</p></article>
+        <article class="card risk"><h3>过早扩展范围</h3><p>在 Part 的窄 capability 闭环稳定前，不承诺通用装配体、工程图、多 CAD 或全自动拓扑推理。</p></article>
+      </div>
+    </section>
+
+    <section id="next" class="card next">
+      <h2>立即下一步</h2>
+      <p>当前阶段只推进能够降低架构风险和验证用户价值的工作。</p>
+      <ol>
+        <li>准备 Windows 11、SOLIDWORKS 2025 API SDK、SOLIDWORKS 2026 兼容环境与 Visual Studio 2026。</li>
+        <li>把旧实现移入 <code>research/legacy</code>，创建全新 Solution。</li>
+        <li>完成最薄 <code>ISwAddin</code>、Task Pane 和安全卸载。</li>
+        <li>建立 .NET 10 Host 与 Named Pipe 协议握手。</li>
+        <li>定义 Snapshot、ExecutionPlan、Result 的 v1 schema。</li>
+        <li>用手写计划完成 M1 golden fixture 和失败恢复。</li>
+        <li>建立真机验证记录与回归语料格式。</li>
+        <li>同步访谈目标用户，选择首个真实工作流。</li>
+      </ol>
+    </section>
+
+    <section class="card sources">
+      <div class="kicker">Official sources</div>
+      <h2>当前基线依据</h2>
+      <ul>
+        <li><a href="https://help.solidworks.com/2025/english/api/sldworksapiprogguide/welcome.htm">SOLIDWORKS 2025 API Help</a></li>
+        <li><a href="https://help.solidworks.com/2026/english/api/sldworksapiprogguide/welcome.htm">SOLIDWORKS 2026 API Help</a></li>
+        <li><a href="https://help.solidworks.com/2025/english/api/sldworksapiprogguide/GettingStarted/Visual_C__Standalone_and_Add-in_Applications.htm">Visual C# Standalone and Add-in Applications</a></li>
+        <li><a href="https://www.solidworks.com/support/system-requirements">SOLIDWORKS System Requirements</a></li>
+        <li><a href="https://learn.microsoft.com/en-us/visualstudio/releases/2026/compatibility">Visual Studio 2026 Compatibility</a></li>
+        <li><a href="https://dotnet.microsoft.com/en-us/platform/support/policy">.NET Support Policy</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>Text2CAD 2026 产品执行计划 · 更新于 2026-07-13 · 旧 SwCopilot 实现不再作为产品基线</footer>
+</body>
+</html>

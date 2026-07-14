@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <RootNamespace>Text2Cad.Addin</RootNamespace>
+    <AssemblyName>Text2Cad.Addin</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <Version>0.1.0</Version>
+    <Authors>Text2CAD</Authors>
+    <Description>Text2CAD SOLIDWORKS in-process add-in.</Description>
+    <SolidWorksInstallDir Condition="'$(SolidWorksInstallDir)' == ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\SolidWorks\SOLIDWORKS 2025\Setup', 'SolidWorks Folder', '', Microsoft.Win32.RegistryView.Registry64))</SolidWorksInstallDir>
+    <SolidWorksApiRedistDir>$(SolidWorksInstallDir)api\redist</SolidWorksApiRedistDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="SolidWorks.Interop.sldworks">
+      <HintPath>$(SolidWorksApiRedistDir)\SolidWorks.Interop.sldworks.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.swconst">
+      <HintPath>$(SolidWorksApiRedistDir)\SolidWorks.Interop.swconst.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.swpublished">
+      <HintPath>$(SolidWorksApiRedistDir)\SolidWorks.Interop.swpublished.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="ValidateSolidWorksReferences" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(SolidWorksInstallDir)' == ''" Text="SOLIDWORKS 2025 was not found. Set the SolidWorksInstallDir MSBuild property." />
+    <Error Condition="!Exists('$(SolidWorksApiRedistDir)\SolidWorks.Interop.sldworks.dll')" Text="SOLIDWORKS 2025 PIA files were not found under '$(SolidWorksApiRedistDir)'." />
+  </Target>
+</Project>

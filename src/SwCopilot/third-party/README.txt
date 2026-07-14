@@ -1,23 +1,36 @@
-Put the SolidWorks 2025 Primary Interop Assemblies (PIAs) here before building.
+LEGACY RESEARCH DIRECTORY — DO NOT USE FOR THE NEW TEXT2CAD IMPLEMENTATION
+===========================================================================
 
-Copy these THREE files from your SolidWorks 2025 installation:
+This folder belongs to the retired src\SwCopilot proof of concept. That code,
+its project file, and the deploy scripts are preserved only as research
+evidence. They are not the Text2CAD 2026 product baseline.
 
-    C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS\api\redist\
+Do not copy SOLIDWORKS 2025 or 2026 PIAs here for product development, and do not
+run the legacy deploy scripts after building this project.
 
-into this folder (src\SwCopilot\third-party\):
+Historical build only
+---------------------
 
-    SolidWorks.Interop.sldworks.dll
-    SolidWorks.Interop.swconst.dll
-    SolidWorks.Interop.swpublished.dll
+If the old proof of concept must be compiled for comparison, obtain these
+three Primary Interop Assemblies from the exact SOLIDWORKS version used for
+that comparison:
 
-Notes
------
-- The .csproj references them by HintPath = third-party\<name>.dll with
-  Copy Local = False. SolidWorks loads its own PIAs at runtime, so we do not
-  ship them; we only need them at compile time.
-- Use the 2025 versions so the interop matches the machine that will run the
-  add-in (your colleague's SolidWorks 2025). If that machine is a different SW
-  version, copy the PIAs from THAT version and rebuild.
-- If the api\redist folder is missing, some installs place them under:
-    C:\Program Files\SOLIDWORKS Corp\SOLIDWORKS\api\redist\CLR2\  (older)
-  or you can add the "SOLIDWORKS API SDK" component via the SW installer.
+    <SOLIDWORKS install>\api\redist\SolidWorks.Interop.sldworks.dll
+    <SOLIDWORKS install>\api\redist\SolidWorks.Interop.swconst.dll
+    <SOLIDWORKS install>\api\redist\SolidWorks.Interop.swpublished.dll
+
+Place them in this directory temporarily. Never commit proprietary,
+version-specific SOLIDWORKS binaries.
+
+Current implementation baseline
+-------------------------------
+
+The new implementation will use:
+
+    SOLIDWORKS 2025 API baseline + SOLIDWORKS 2026 compatibility validation
+    Text2Cad.Addin: .NET Framework 4.8, x64
+    Text2Cad.Host:  .NET 10 LTS, x64
+
+The final local PIA reference convention will be defined with the new
+Text2Cad solution. See the repository root README.md and
+text2cad_mvp_spec.md for the current architecture.

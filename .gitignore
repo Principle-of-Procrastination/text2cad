@@ -4,6 +4,8 @@
 .vs/
 *.user
 *.suo
+*.rsuser
+*.sln.docstates
 
 # SolidWorks interop DLLs are copied locally per machine (proprietary, version-specific)
 src/SwCopilot/third-party/*.dll
@@ -11,6 +13,17 @@ src/SwCopilot/third-party/*.dll
 # Inno Setup output
 [Oo]utput/
 *-Setup.exe
+
+# Local build / verification scratch
+/artifacts/
+/.agents/
+[Tt]est[Rr]esults/
+
+# Local SOLIDWORKS installation media (never commit multi-GB installers)
+/SolidWorks 20*/
+/SolidWorks 20*.7z
+/SolidWorks 20*.zip
+/SolidWorks 20*.iso
 
 # OS junk
 .DS_Store
