@@ -12,6 +12,15 @@ namespace Text2Cad.Addin.UI
     [ComVisible(false)]
     internal sealed class TaskPaneControl : UserControl
     {
+        private enum TranscriptTone
+        {
+            Assistant,
+            User,
+            Success,
+            Error,
+            Notice
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         private struct NativeRect
         {
@@ -22,104 +31,165 @@ namespace Text2Cad.Addin.UI
         }
 
         private readonly ISldWorks _solidWorks;
-        private readonly CreateTestPlateCommand _createTestPlateCommand;
+        private readonly CreatePrimitiveCommand _createPrimitiveCommand;
         private readonly Timer _refreshTimer;
         private readonly Label _connectionValue;
-        private readonly Label _documentValue;
-        private readonly Label _selectionValue;
-        private readonly Label _detailValue;
-        private readonly Label _operationValue;
-        private readonly Button _createPlateButton;
-        private bool _isCreatingPlate;
+        private readonly Label _contextValue;
+        private readonly RichTextBox _conversation;
+        private readonly TextBox _promptInput;
+        private readonly Button _sendButton;
+        private readonly Button[] _exampleButtons;
+        private readonly Label _activityValue;
+        private readonly Font _chatRoleFont;
+        private readonly Font _chatBodyFont;
+        private bool _isExecuting;
 
         public TaskPaneControl(ISldWorks solidWorks)
         {
             _solidWorks = solidWorks ?? throw new ArgumentNullException(nameof(solidWorks));
-            _createTestPlateCommand = new CreateTestPlateCommand(_solidWorks);
+            _createPrimitiveCommand = new CreatePrimitiveCommand(_solidWorks);
 
             Dock = DockStyle.Fill;
             BackColor = Color.FromArgb(247, 249, 252);
             ForeColor = Color.FromArgb(24, 34, 53);
             Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             AutoScaleMode = AutoScaleMode.Dpi;
-            MinimumSize = new Size(260, 360);
+            MinimumSize = new Size(260, 420);
             Size = new Size(360, 720);
 
-            var layout = new TableLayoutPanel
+            _chatBodyFont = new Font("Segoe UI", 9.5F, FontStyle.Regular, GraphicsUnit.Point);
+            _chatRoleFont = new Font("Segoe UI Semibold", 9F, FontStyle.Bold, GraphicsUnit.Point);
+
+            var root = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                AutoScroll = true,
                 BackColor = BackColor,
-                Padding = new Padding(16),
+                Padding = new Padding(12),
                 ColumnCount = 1,
-                RowCount = 9
+                RowCount = 3
             };
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            layout.Controls.Add(CreateHeader(), 0, 0);
+            var header = CreateHeader(out _connectionValue, out _contextValue);
+            root.Controls.Add(header, 0, 0);
 
-            var connectionCard = CreateCard("连接状态", out _connectionValue);
-            layout.Controls.Add(connectionCard, 0, 1);
+            _conversation = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle,
+                DetectUrls = false,
+                ReadOnly = true,
+                ScrollBars = RichTextBoxScrollBars.Vertical,
+                ShortcutsEnabled = true,
+                TabStop = false,
+                Font = _chatBodyFont,
+                Margin = new Padding(0, 4, 0, 10)
+            };
+            root.Controls.Add(_conversation, 0, 1);
 
-            var documentCard = CreateCard("当前文档", out _documentValue);
-            layout.Controls.Add(documentCard, 0, 2);
-
-            var selectionCard = CreateCard("当前选择", out _selectionValue);
-            layout.Controls.Add(selectionCard, 0, 3);
-
-            _detailValue = new Label
+            var composer = new TableLayoutPanel
             {
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Dock = DockStyle.Top,
-                Margin = new Padding(4, 12, 4, 0),
+                BackColor = BackColor,
+                ColumnCount = 1,
+                RowCount = 5,
+                Margin = Padding.Empty
+            };
+            composer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            composer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            composer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            composer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            composer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            composer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            composer.Controls.Add(new Label
+            {
+                AutoSize = true,
                 ForeColor = Color.FromArgb(88, 99, 118),
-                Text = "API 打通测试：点击下方按钮会新建独立零件，不会修改当前模型。"
-            };
-            layout.Controls.Add(_detailValue, 0, 4);
+                Text = "试试固定能力",
+                Margin = new Padding(2, 0, 2, 4)
+            }, 0, 0);
 
-            _createPlateButton = new Button
-            {
-                Text = "新建 100 × 60 × 10 mm 测试板",
-                AutoSize = false,
-                Dock = DockStyle.Top,
-                Height = 42,
-                FlatStyle = FlatStyle.System,
-                Margin = new Padding(0, 12, 0, 0)
-            };
-            _createPlateButton.Click += CreatePlateButton_Click;
-            layout.Controls.Add(_createPlateButton, 0, 5);
-
-            _operationValue = new Label
+            var examples = new FlowLayoutPanel
             {
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Dock = DockStyle.Top,
-                Margin = new Padding(4, 9, 4, 0),
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                Margin = new Padding(0, 0, 0, 7),
+                Padding = Padding.Empty
+            };
+
+            _exampleButtons = new[]
+            {
+                CreateExampleButton("测试板", "创建一个 100 × 60 × 10 mm 测试板"),
+                CreateExampleButton("40 mm 方块", "创建一个边长 40 mm 的方块"),
+                CreateExampleButton("Ø40 圆柱", "创建一个直径 40 mm、高 60 mm 的圆柱")
+            };
+            examples.Controls.AddRange(_exampleButtons);
+            composer.Controls.Add(examples, 0, 1);
+
+            var inputRow = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                Height = 62,
+                ColumnCount = 2,
+                RowCount = 1,
+                Margin = Padding.Empty
+            };
+            inputRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            inputRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70F));
+            inputRow.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            _promptInput = new TextBox
+            {
+                AcceptsReturn = true,
+                Dock = DockStyle.Fill,
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical,
+                Font = _chatBodyFont,
+                Margin = new Padding(0, 0, 8, 0)
+            };
+            _promptInput.KeyDown += PromptInput_KeyDown;
+            inputRow.Controls.Add(_promptInput, 0, 0);
+
+            _sendButton = new Button
+            {
+                Dock = DockStyle.Fill,
+                FlatStyle = FlatStyle.System,
+                Text = "发送",
+                Margin = Padding.Empty
+            };
+            _sendButton.Click += (_, __) => SubmitPrompt();
+            inputRow.Controls.Add(_sendButton, 1, 0);
+            composer.Controls.Add(inputRow, 0, 2);
+
+            composer.Controls.Add(new Label
+            {
+                AutoSize = true,
+                ForeColor = Color.FromArgb(112, 122, 140),
+                Text = "Enter 发送 · Shift+Enter 换行",
+                Margin = new Padding(2, 5, 2, 0)
+            }, 0, 3);
+
+            _activityValue = new Label
+            {
+                AutoSize = true,
                 ForeColor = Color.FromArgb(88, 99, 118),
-                Text = "等待执行"
+                Text = "等待输入",
+                Margin = new Padding(2, 5, 2, 0)
             };
-            layout.Controls.Add(_operationValue, 0, 6);
+            composer.Controls.Add(_activityValue, 0, 4);
+            root.Controls.Add(composer, 0, 2);
 
-            var refreshButton = new Button
-            {
-                Text = "刷新状态",
-                AutoSize = true,
-                Anchor = AnchorStyles.Left,
-                FlatStyle = FlatStyle.System,
-                Margin = new Padding(4, 12, 4, 0)
-            };
-            refreshButton.Click += (_, __) => RefreshSnapshot();
-            layout.Controls.Add(refreshButton, 0, 8);
-
-            Controls.Add(layout);
+            Controls.Add(root);
 
             _refreshTimer = new Timer { Interval = 750 };
             _refreshTimer.Tick += (_, __) =>
@@ -129,6 +199,11 @@ namespace Text2Cad.Addin.UI
             };
             _refreshTimer.Start();
 
+            AppendMessage(
+                "Text2CAD",
+                "你好，我已经连接到 SOLIDWORKS。输入一句话，我会用固定规则调用真实 CAD API。\n" +
+                ChatCommandRouter.SupportedCapabilities,
+                TranscriptTone.Assistant);
             RefreshSnapshot();
         }
 
@@ -161,18 +236,20 @@ namespace Text2Cad.Addin.UI
             {
                 _refreshTimer.Stop();
                 _refreshTimer.Dispose();
+                _chatRoleFont.Dispose();
+                _chatBodyFont.Dispose();
             }
 
             base.Dispose(disposing);
         }
 
-        private static Control CreateHeader()
+        private static Control CreateHeader(out Label connectionValue, out Label contextValue)
         {
             var panel = new Panel
             {
-                AutoSize = true,
                 Dock = DockStyle.Top,
-                Margin = new Padding(0, 0, 0, 14)
+                Height = 86,
+                Margin = new Padding(0, 0, 0, 6)
             };
 
             var title = new Label
@@ -184,53 +261,231 @@ namespace Text2Cad.Addin.UI
                 Text = "Text2CAD"
             };
 
-            var subtitle = new Label
+            var badge = new Label
             {
                 AutoSize = true,
-                ForeColor = Color.FromArgb(88, 99, 118),
-                Location = new Point(2, 38),
-                Text = "SOLIDWORKS 原生建模助手"
+                BackColor = Color.FromArgb(225, 235, 252),
+                ForeColor = Color.FromArgb(50, 91, 160),
+                Font = new Font("Segoe UI Semibold", 8F, FontStyle.Bold, GraphicsUnit.Point),
+                Location = new Point(112, 9),
+                Padding = new Padding(5, 2, 5, 2),
+                Text = "DEMO"
             };
 
+            connectionValue = new Label
+            {
+                AutoSize = true,
+                ForeColor = Color.FromArgb(26, 132, 87),
+                Location = new Point(2, 43),
+                Text = "● 正在连接 SOLIDWORKS…"
+            };
+
+            var contextLabel = new Label
+            {
+                AutoEllipsis = true,
+                ForeColor = Color.FromArgb(88, 99, 118),
+                Location = new Point(2, 64),
+                Height = 19,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Text = "读取当前文档…"
+            };
+            contextValue = contextLabel;
+
+            panel.Resize += (_, __) => contextLabel.Width = Math.Max(40, panel.ClientSize.Width - 4);
             panel.Controls.Add(title);
-            panel.Controls.Add(subtitle);
-            panel.Height = 62;
+            panel.Controls.Add(badge);
+            panel.Controls.Add(connectionValue);
+            panel.Controls.Add(contextLabel);
             return panel;
         }
 
-        private static Control CreateCard(string caption, out Label valueLabel)
+        private Button CreateExampleButton(string label, string prompt)
         {
-            var panel = new Panel
-            {
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Dock = DockStyle.Top,
-                Height = 72,
-                Margin = new Padding(0, 0, 0, 10),
-                Padding = new Padding(12, 9, 12, 9)
-            };
-
-            var captionLabel = new Label
+            var button = new Button
             {
                 AutoSize = true,
-                ForeColor = Color.FromArgb(104, 116, 137),
-                Location = new Point(12, 9),
-                Text = caption
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                FlatStyle = FlatStyle.System,
+                Height = 28,
+                Text = label,
+                Margin = new Padding(0, 0, 6, 3),
+                Padding = new Padding(3, 0, 3, 0)
             };
-
-            valueLabel = new Label
+            button.Click += (_, __) =>
             {
-                AutoEllipsis = true,
-                Dock = DockStyle.Bottom,
-                Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point),
-                ForeColor = Color.FromArgb(24, 34, 53),
-                Height = 24,
-                Text = "读取中…"
+                _promptInput.Text = prompt;
+                SubmitPrompt();
             };
+            return button;
+        }
 
-            panel.Controls.Add(captionLabel);
-            panel.Controls.Add(valueLabel);
-            return panel;
+        private void PromptInput_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter || e.Shift)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            SubmitPrompt();
+        }
+
+        private void SubmitPrompt()
+        {
+            if (_isExecuting)
+            {
+                return;
+            }
+
+            string prompt = _promptInput.Text.Trim();
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                _activityValue.ForeColor = Color.FromArgb(183, 115, 24);
+                _activityValue.Text = "请先输入一条指令";
+                _promptInput.Focus();
+                return;
+            }
+
+            _promptInput.Clear();
+            AppendMessage("你", prompt, TranscriptTone.User);
+
+            ChatRouteResult route = ChatCommandRouter.Route(prompt);
+            if (!route.ShouldExecute)
+            {
+                AppendMessage("Text2CAD", route.AssistantMessage, TranscriptTone.Notice);
+                _activityValue.ForeColor = Color.FromArgb(88, 99, 118);
+                _activityValue.Text = "等待输入";
+                _promptInput.Focus();
+                return;
+            }
+
+            AppendMessage("Text2CAD", route.AssistantMessage, TranscriptTone.Assistant);
+            _isExecuting = true;
+            SetComposerEnabled(false);
+            _refreshTimer.Stop();
+            _activityValue.ForeColor = Color.FromArgb(50, 91, 160);
+            _activityValue.Text = route.BusyMessage;
+            Refresh();
+
+            PrimitiveKind primitive = route.Primitive!.Value;
+            try
+            {
+                BeginInvoke(new Action(() => ExecutePrimitive(primitive)));
+            }
+            catch (InvalidOperationException exception)
+            {
+                AddinLog.Error("Could not queue the Task Pane chat command.", exception);
+                if (CanUpdateUi)
+                {
+                    AppendMessage("Text2CAD", "执行失败：面板正在关闭，请重新打开后再试。", TranscriptTone.Error);
+                    _isExecuting = false;
+                    SetComposerEnabled(true);
+                    _refreshTimer.Start();
+                }
+            }
+        }
+
+        private void ExecutePrimitive(PrimitiveKind primitive)
+        {
+            if (!CanUpdateUi)
+            {
+                return;
+            }
+
+            try
+            {
+                PrimitiveCreationResult result = _createPrimitiveCommand.Execute(primitive);
+                if (CanUpdateUi)
+                {
+                    AppendMessage(
+                        "Text2CAD",
+                        $"✓ 已在 {result.DocumentTitle} 中创建 {result.ShapeDescription}，结果是可继续编辑的原生草图和拉伸特征。",
+                        TranscriptTone.Success);
+                    _activityValue.ForeColor = Color.FromArgb(26, 132, 87);
+                    _activityValue.Text = "执行成功";
+                }
+            }
+            catch (Exception exception)
+            {
+                if (CanUpdateUi)
+                {
+                    AppendMessage("Text2CAD", $"执行失败：{exception.Message}", TranscriptTone.Error);
+                    _activityValue.ForeColor = Color.FromArgb(190, 54, 54);
+                    _activityValue.Text = "执行失败";
+                }
+                AddinLog.Error("Task Pane chat command failed.", exception);
+            }
+            finally
+            {
+                if (CanUpdateUi)
+                {
+                    _isExecuting = false;
+                    SetComposerEnabled(true);
+                    _refreshTimer.Start();
+                    RefreshSnapshot();
+                    _promptInput.Focus();
+                }
+            }
+        }
+
+        private bool CanUpdateUi => !IsDisposed && !Disposing && IsHandleCreated;
+
+        private void SetComposerEnabled(bool enabled)
+        {
+            _promptInput.Enabled = enabled;
+            _sendButton.Enabled = enabled;
+            foreach (Button button in _exampleButtons)
+            {
+                button.Enabled = enabled;
+            }
+        }
+
+        private void AppendMessage(string role, string message, TranscriptTone tone)
+        {
+            Color roleColor;
+            Color bodyColor;
+
+            switch (tone)
+            {
+                case TranscriptTone.User:
+                    roleColor = Color.FromArgb(50, 91, 160);
+                    bodyColor = Color.FromArgb(35, 68, 122);
+                    break;
+                case TranscriptTone.Success:
+                    roleColor = Color.FromArgb(26, 132, 87);
+                    bodyColor = Color.FromArgb(26, 105, 73);
+                    break;
+                case TranscriptTone.Error:
+                    roleColor = Color.FromArgb(190, 54, 54);
+                    bodyColor = Color.FromArgb(154, 42, 42);
+                    break;
+                case TranscriptTone.Notice:
+                    roleColor = Color.FromArgb(183, 115, 24);
+                    bodyColor = Color.FromArgb(128, 83, 24);
+                    break;
+                default:
+                    roleColor = Color.FromArgb(24, 34, 53);
+                    bodyColor = Color.FromArgb(50, 60, 78);
+                    break;
+            }
+
+            _conversation.SelectionStart = _conversation.TextLength;
+            _conversation.SelectionLength = 0;
+            _conversation.SelectionFont = _chatRoleFont;
+            _conversation.SelectionColor = roleColor;
+            _conversation.AppendText(role + System.Environment.NewLine);
+
+            _conversation.SelectionFont = _chatBodyFont;
+            _conversation.SelectionColor = bodyColor;
+            _conversation.AppendText(
+                message.Replace("\n", System.Environment.NewLine) +
+                System.Environment.NewLine +
+                System.Environment.NewLine);
+
+            _conversation.SelectionStart = _conversation.TextLength;
+            _conversation.SelectionLength = 0;
+            _conversation.ScrollToCaret();
         }
 
         private void RefreshSnapshot()
@@ -246,64 +501,27 @@ namespace Text2Cad.Addin.UI
                 document = _solidWorks.IActiveDoc2;
                 if (document == null)
                 {
-                    _documentValue.Text = "未打开文档";
-                    _selectionValue.Text = "0 个对象";
+                    _contextValue.Text = "未打开文档 · 已选 0 个对象";
                     return;
                 }
 
                 string title = document.GetTitle();
                 var documentType = (swDocumentTypes_e)document.GetType();
-                _documentValue.Text = $"{GetDocumentTypeLabel(documentType)} · {title}";
-
                 selectionManager = document.SelectionManager as ISelectionMgr;
                 int selectedCount = selectionManager?.GetSelectedObjectCount2(-1) ?? 0;
-                _selectionValue.Text = $"{selectedCount} 个对象";
+                _contextValue.Text = $"{GetDocumentTypeLabel(documentType)} · {title} · 已选 {selectedCount} 个对象";
             }
             catch (COMException exception)
             {
-                _connectionValue.Text = "读取状态失败";
+                _connectionValue.Text = "● SOLIDWORKS 状态读取失败";
                 _connectionValue.ForeColor = Color.FromArgb(190, 54, 54);
-                _detailValue.Text = "SOLIDWORKS COM 暂时不可用，稍后会自动重试。";
+                _contextValue.Text = "稍后会自动重试";
                 AddinLog.Error("Failed to refresh Task Pane snapshot.", exception);
             }
             finally
             {
                 ReleaseComObject(selectionManager);
                 ReleaseComObject(document);
-            }
-        }
-
-        private void CreatePlateButton_Click(object? sender, EventArgs e)
-        {
-            if (_isCreatingPlate)
-            {
-                return;
-            }
-
-            _isCreatingPlate = true;
-            _createPlateButton.Enabled = false;
-            _refreshTimer.Stop();
-            _operationValue.ForeColor = Color.FromArgb(50, 91, 160);
-            _operationValue.Text = "正在通过 SOLIDWORKS API 新建测试板…";
-
-            try
-            {
-                string documentTitle = _createTestPlateCommand.Execute();
-                _operationValue.ForeColor = Color.FromArgb(26, 132, 87);
-                _operationValue.Text = $"✓ 已在 {documentTitle} 中生成原生草图和拉伸凸台。";
-            }
-            catch (Exception exception)
-            {
-                _operationValue.ForeColor = Color.FromArgb(190, 54, 54);
-                _operationValue.Text = $"创建失败：{exception.Message}";
-                AddinLog.Error("Task Pane test plate command failed.", exception);
-            }
-            finally
-            {
-                _createPlateButton.Enabled = true;
-                _isCreatingPlate = false;
-                _refreshTimer.Start();
-                RefreshSnapshot();
             }
         }
 

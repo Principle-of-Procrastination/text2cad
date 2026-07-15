@@ -168,7 +168,7 @@
   <main class="shell">
     <section class="notice warning">
       <span class="icon">!</span>
-      <div><strong>当前状态：Panel 与首个 SOLIDWORKS API 建模探针已真机通过</strong><p>2026-07-14 已在 SOLIDWORKS 2025 SP0.0 验证：Text2CAD 可自动加载，点击按钮会新建独立 Part，并生成原生 <code>ProfileFeature</code>、<code>Extrusion</code> 和一个尺寸为 100 × 60 × 10 mm 的实体。这只是 M1 执行链路的最小探针；Host、IPC、schema、预览/确认、Undo/回滚和完整 golden fixture 尚未完成，因此不能宣称 M0/M1 整体通过。不要运行旧 <code>deploy/install.bat</code>，也不要把 <code>src/SwCopilot</code> 的结果计入 M0/M1。</p></div>
+      <div><strong>当前状态：首个建模探针已真机通过，固定能力对话层已完成离线验证</strong><p>2026-07-14 已在 SOLIDWORKS 2025 SP0.0 验证：Text2CAD 可自动加载并创建包含原生 <code>ProfileFeature</code>、<code>Extrusion</code> 和 100 × 60 × 10 mm 单实体的新 Part。2026-07-15 已实现文字输入、消息反馈和测试板/方块/圆柱三项确定性路由；Debug/Release 构建与 52 项离线路由、尺寸、特征名检查通过。由于本机 SOLIDWORKS 许可证过期，三条新对话的真机回归当前为 <code>BLOCKED</code>。这只是 M1 执行链路的最小探针；Host、IPC、schema、预览/确认、Undo/回滚和完整 golden fixture 尚未完成，因此不能宣称 M0/M1 整体通过。不要运行旧 <code>deploy/install.bat</code>，也不要把 <code>src/SwCopilot</code> 的结果计入 M0/M1。</p></div>
     </section>
 
     <section class="notice info">
@@ -237,7 +237,7 @@
         </tbody>
       </table>
       <div class="notice good" style="margin-top:18px">
-        <span class="icon">✓</span><div><strong>M0 Gate</strong><p>验收 M0 用例时必须保持只读；当前测试板按钮属于独立的 M1 API 探针，不计入 M0 用例。全部 M0 用例通过后才能进入完整 M1。Host 离线、崩溃或协议不兼容时，Add-in 必须保持 SOLIDWORKS 稳定。</p></div>
+        <span class="icon">✓</span><div><strong>M0 Gate</strong><p>验收 M0 用例时必须保持只读；当前固定能力对话命令属于独立的 M1 API 探针，不计入 M0 用例。全部 M0 用例通过后才能进入完整 M1。Host 离线、崩溃或协议不兼容时，Add-in 必须保持 SOLIDWORKS 稳定。</p></div>
       </div>
     </section>
 
@@ -441,7 +441,7 @@ rollbackStatus：
     </section>
   </main>
 
-  <footer>Text2CAD M0–M1 真机验证指南 · 更新于 2026-07-14 · 旧 VBA/SwCopilot 流程已退役</footer>
+  <footer>Text2CAD M0–M1 真机验证指南 · 更新于 2026-07-15 · 旧 VBA/SwCopilot 流程已退役</footer>
   <div class="toast" role="status" aria-live="polite">已复制</div>
 
   <script>

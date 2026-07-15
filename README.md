@@ -94,7 +94,8 @@ Text2Cad.sln                                   当前新实现 Solution
 text2cad_mvp_spec.md                           2026 MVP 技术规格
 text2cad_product_plan.html                     2026 产品执行计划（单页）
 text2cad_validation_guide.html                 2026 M0/M1 真机验证指南（单页）
-src/Text2Cad.Addin/                            M0/M1 进程内 Add-in、Task Pane 与测试板命令
+src/Text2Cad.Addin/                            M0/M1 进程内 Add-in、对话 Task Pane 与基础几何命令
+tests/Text2Cad.Addin.SmokeTests/                无许可证时可运行的路由与尺寸契约检查
 scripts/Register-Text2CadAddin.cmd             开发机注册脚本
 scripts/Unregister-Text2CadAddin.cmd           开发机卸载脚本
 src/SwCopilot/                                 早期预研代码，仅供参考
@@ -109,6 +110,7 @@ src/
   Text2Cad.Host/        .NET 10 LTS，Planner 与产品逻辑（待创建）
   Text2Cad.Protocol/    跨进程 DTO 与 schema（待创建）
 tests/
+  Text2Cad.Addin.SmokeTests/   net48 离线路由与尺寸契约检查
   Text2Cad.UnitTests/          （待创建）
   Text2Cad.ContractTests/      （待创建）
   Text2Cad.IntegrationTests/   （待创建）
@@ -133,12 +135,23 @@ research/
 2. 保存工作并关闭 SOLIDWORKS。
 3. 在管理员命令提示符中运行 `scripts\Register-Text2CadAddin.cmd`。
 4. 正常启动 SOLIDWORKS；注册脚本会把 Text2CAD 配置为随 SOLIDWORKS 自动加载。如未出现，可在 `工具 > 插件` 中勾选 `Text2CAD`。
-5. 确认右侧 Task Pane 显示连接状态、当前文档和选择数量。
-6. 点击 `新建 100 × 60 × 10 mm 测试板`，确认出现一个新的未保存零件，特征树包含 `Text2CAD_TestPlate_Sketch` 和 `Text2CAD_TestPlate_100x60x10`。
+5. 确认右侧 Task Pane 显示连接状态、当前文档、对话记录、文字输入框和三个固定能力入口。
+6. 输入并发送 `创建一个 100 × 60 × 10 mm 测试板`，确认出现新的未保存零件，特征树包含 `Text2CAD_TestPlate_Sketch` 和 `Text2CAD_TestPlate_100x60x10`。
+7. 分别发送 `创建一个边长 40 mm 的方块` 和 `创建一个直径 40 mm、高 60 mm 的圆柱`，确认各自新建独立 Part，并收到成功消息。
 
-当前 Panel 已打通第一个 M1 确定性 CAD 闭环：按钮始终基于模板新建独立 Part，在新文档里创建 `100 × 60 mm` 矩形草图和 `10 mm` 盲孔式凸台拉伸；不会回退到当前已有文档。模板、草图或拉伸失败时只关闭本次新建的半成品，并在 Panel 和日志中报告错误。实现与排错细节见 [`src/Text2Cad.Addin/README.md`](src/Text2Cad.Addin/README.md)。
+当前 Panel 已具备最小完整对话体验：文字输入、Enter 发送、消息记录、执行中状态、成功/失败反馈和三个示例入口。`ChatCommandRouter` 只做确定性关键词匹配，不接 LLM；三个能力分别创建 `100 × 60 × 10 mm` 测试板、`40 × 40 × 40 mm` 方块和 `Ø40 × 60 mm` 圆柱。每次命令都基于模板新建独立 Part，不会回退到当前已有文档；失败时只关闭本次新建的半成品。实现与排错细节见 [`src/Text2Cad.Addin/README.md`](src/Text2Cad.Addin/README.md)。
 
 2026-07-14 已在本机 SOLIDWORKS 2025 SP0.0 真机验证：活动文档为新建 `swDocPART`，草图编辑状态已退出，特征类型为 `ProfileFeature` 和 `Extrusion`，包含 1 个实体，实体包围盒为精确的 `100 × 60 × 10 mm`。这仍是 API 连通性夹具，不等同于完整的 Execution Plan、Undo/恢复或 AI Planner。
+
+2026-07-15 对话层、三能力路由和通用基础几何命令已完成 Debug/Release 构建；离线 smoke-test 的 52 项路由、尺寸与特征名检查全部通过。由于本机 SOLIDWORKS 许可证已过期，三条新对话的真机回归当前为 `BLOCKED`，许可证恢复后再按上面的步骤执行并记录。
+
+无有效 SOLIDWORKS 许可证时，构建 Solution 后仍可运行：
+
+```powershell
+.\tests\Text2Cad.Addin.SmokeTests\bin\x64\Debug\net48\Text2Cad.Addin.SmokeTests.exe
+```
+
+预期输出为 `PASS: 52 checks completed.`；测试边界见 [`tests/Text2Cad.Addin.SmokeTests/README.md`](tests/Text2Cad.Addin.SmokeTests/README.md)。
 
 详细的环境与验收步骤见 [`text2cad_validation_guide.html`](text2cad_validation_guide.html)。技术契约见 [`text2cad_mvp_spec.md`](text2cad_mvp_spec.md)，产品路线见 [`text2cad_product_plan.html`](text2cad_product_plan.html)。
 

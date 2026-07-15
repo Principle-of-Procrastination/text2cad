@@ -8,28 +8,38 @@ using Text2Cad.Addin.Infrastructure;
 
 namespace Text2Cad.Addin.Commands
 {
-    internal sealed class CreateTestPlateCommand
+    internal sealed class PrimitiveCreationResult
     {
-        private const double HalfWidthMeters = 0.050;
-        private const double HalfHeightMeters = 0.030;
-        private const double ExtrusionDepthMeters = 0.010;
+        public PrimitiveCreationResult(string documentTitle, string shapeDescription)
+        {
+            DocumentTitle = documentTitle;
+            ShapeDescription = shapeDescription;
+        }
 
+        public string DocumentTitle { get; }
+
+        public string ShapeDescription { get; }
+    }
+
+    internal sealed class CreatePrimitiveCommand
+    {
         private readonly ISldWorks _solidWorks;
 
-        public CreateTestPlateCommand(ISldWorks solidWorks)
+        public CreatePrimitiveCommand(ISldWorks solidWorks)
         {
             _solidWorks = solidWorks ?? throw new ArgumentNullException(nameof(solidWorks));
         }
 
-        public string Execute()
+        public PrimitiveCreationResult Execute(PrimitiveKind primitiveKind)
         {
+            PrimitiveDefinition definition = PrimitiveCatalog.Get(primitiveKind);
             IModelDoc2? document = null;
             SketchManager? sketchManager = null;
             FeatureManager? featureManager = null;
             Feature? sketchPlane = null;
             Feature? sketchFeature = null;
             Feature? extrusionFeature = null;
-            object? rectangleSegments = null;
+            object? profileEntities = null;
             string? documentTitle = null;
             string stage = "读取默认零件模板";
             bool operationCompleted = false;
@@ -37,7 +47,7 @@ namespace Text2Cad.Addin.Commands
             try
             {
                 string templatePath = GetDefaultPartTemplatePath();
-                AddinLog.Info($"Creating test plate with template '{templatePath}'.");
+                AddinLog.Info($"Creating {definition.DisplayName} with template '{templatePath}'.");
 
                 stage = "新建零件文档";
                 document = _solidWorks.NewDocument(templatePath, 0, 0, 0) as IModelDoc2
@@ -51,7 +61,7 @@ namespace Text2Cad.Addin.Commands
 
                 EnsureTargetDocumentIsActive(document);
 
-                AddinLog.Info($"New part document '{documentTitle}' created for the test plate.");
+                AddinLog.Info($"New part document '{documentTitle}' created for {definition.DisplayName}.");
 
                 sketchManager = document.SketchManager
                     ?? throw new InvalidOperationException("无法访问 SOLIDWORKS 草图管理器。");
@@ -70,19 +80,19 @@ namespace Text2Cad.Addin.Commands
                     }
                 }
 
-                stage = "创建 100 × 60 mm 草图";
-                CreateRectangleSketch(sketchManager, !reuseActiveSketch, out rectangleSegments);
+                stage = $"创建 {definition.DisplayName}草图";
+                CreateProfileSketch(sketchManager, !reuseActiveSketch, definition, out profileEntities);
 
                 sketchFeature = FindLastFeatureByType(document, "ProfileFeature")
-                    ?? throw new InvalidOperationException("矩形已经绘制，但没有找到对应的二维草图特征。");
-                TryRenameFeature(sketchFeature, "Text2CAD_TestPlate_Sketch");
+                    ?? throw new InvalidOperationException("轮廓已经绘制，但没有找到对应的二维草图特征。");
+                TryRenameFeature(sketchFeature, definition.SketchFeatureName);
 
-                stage = "创建 10 mm 拉伸凸台";
+                stage = $"拉伸 {definition.DisplayName}";
                 EnsureTargetDocumentIsActive(document);
                 document.ClearSelection2(true);
                 if (!sketchFeature.Select2(false, 0))
                 {
-                    throw new InvalidOperationException("无法选择刚创建的矩形草图。");
+                    throw new InvalidOperationException("无法选择刚创建的二维草图。");
                 }
 
                 featureManager = document.FeatureManager
@@ -94,7 +104,7 @@ namespace Text2Cad.Addin.Commands
                     false,
                     (int)swEndConditions_e.swEndCondBlind,
                     (int)swEndConditions_e.swEndCondBlind,
-                    ExtrusionDepthMeters,
+                    definition.ExtrusionDepthMeters,
                     0,
                     false,
                     false,
@@ -118,25 +128,25 @@ namespace Text2Cad.Addin.Commands
                     throw new InvalidOperationException("SOLIDWORKS 没有创建拉伸凸台；请查看 Add-in 日志获取详细信息。");
                 }
 
-                TryRenameFeature(extrusionFeature, "Text2CAD_TestPlate_100x60x10");
+                TryRenameFeature(extrusionFeature, definition.ExtrusionFeatureName);
 
                 stage = "重建并显示结果";
                 document.ClearSelection2(true);
                 if (!document.EditRebuild3())
                 {
-                    throw new InvalidOperationException("测试板已生成，但 SOLIDWORKS 重建模型失败。");
+                    throw new InvalidOperationException($"{definition.DisplayName}已生成，但 SOLIDWORKS 重建模型失败。");
                 }
 
-                TryZoomToFit(document);
+                TryShowResult(document);
                 operationCompleted = true;
 
                 string resultTitle = string.IsNullOrWhiteSpace(documentTitle) ? "新零件" : documentTitle;
-                AddinLog.Info($"Test plate created successfully in '{resultTitle}'.");
-                return resultTitle;
+                AddinLog.Info($"{definition.DisplayName} created successfully in '{resultTitle}'.");
+                return new PrimitiveCreationResult(resultTitle, definition.DisplayName);
             }
             catch (Exception exception)
             {
-                AddinLog.Error($"Test plate creation failed during stage '{stage}'.", exception);
+                AddinLog.Error($"{definition.DisplayName} creation failed during stage '{stage}'.", exception);
 
                 if (!operationCompleted &&
                     documentTitle is string failedDocumentTitle &&
@@ -149,7 +159,7 @@ namespace Text2Cad.Addin.Commands
             }
             finally
             {
-                ReleaseComObjects(rectangleSegments);
+                ReleaseComObjects(profileEntities);
                 ReleaseComObject(extrusionFeature);
                 ReleaseComObject(sketchFeature);
                 ReleaseComObject(sketchPlane);
@@ -252,11 +262,20 @@ namespace Text2Cad.Addin.Commands
 
         private void EnsureTargetDocumentIsActive(IModelDoc2 targetDocument)
         {
-            IModelDoc2? activeDocument = _solidWorks.IActiveDoc2;
-            if (activeDocument == null || !AreSameComObject(activeDocument, targetDocument))
+            IModelDoc2? activeDocument = null;
+
+            try
             {
-                throw new InvalidOperationException(
-                    "SOLIDWORKS 当前活动文档不是本次新建的零件，已中止操作以保护其他模型。");
+                activeDocument = _solidWorks.IActiveDoc2;
+                if (activeDocument == null || !AreSameComObject(activeDocument, targetDocument))
+                {
+                    throw new InvalidOperationException(
+                        "SOLIDWORKS 当前活动文档不是本次新建的零件，已中止操作以保护其他模型。");
+                }
+            }
+            finally
+            {
+                ReleaseComObject(activeDocument);
             }
         }
 
@@ -300,13 +319,14 @@ namespace Text2Cad.Addin.Commands
             }
         }
 
-        private static void CreateRectangleSketch(
+        private static void CreateProfileSketch(
             SketchManager sketchManager,
             bool enterSketch,
-            out object? rectangleSegments)
+            PrimitiveDefinition definition,
+            out object? profileEntities)
         {
-            rectangleSegments = null;
-            bool sketchOpened = false;
+            profileEntities = null;
+            bool shouldExitSketch = false;
             Sketch? activeSketch = null;
 
             try
@@ -316,31 +336,48 @@ namespace Text2Cad.Addin.Commands
                     sketchManager.InsertSketch(true);
                 }
 
-                sketchOpened = true;
                 activeSketch = sketchManager.ActiveSketch;
                 if (activeSketch == null)
                 {
                     throw new InvalidOperationException("SOLIDWORKS 没有进入二维草图编辑状态。");
                 }
+                shouldExitSketch = true;
 
-                rectangleSegments = sketchManager.CreateCornerRectangle(
-                    -HalfWidthMeters,
-                    -HalfHeightMeters,
-                    0,
-                    HalfWidthMeters,
-                    HalfHeightMeters,
-                    0);
-
-                if (rectangleSegments == null)
+                switch (definition.Profile)
                 {
-                    throw new InvalidOperationException("SOLIDWORKS 没有创建矩形草图线段。");
+                    case PrimitiveProfileKind.Rectangle:
+                        profileEntities = sketchManager.CreateCornerRectangle(
+                            -definition.HalfWidthMeters,
+                            -definition.HalfHeightMeters,
+                            0,
+                            definition.HalfWidthMeters,
+                            definition.HalfHeightMeters,
+                            0);
+                        break;
+                    case PrimitiveProfileKind.Circle:
+                        profileEntities = sketchManager.CreateCircleByRadius(
+                            0,
+                            0,
+                            0,
+                            definition.RadiusMeters);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(
+                            nameof(definition.Profile),
+                            definition.Profile,
+                            "未知的草图轮廓类型。");
+                }
+
+                if (profileEntities == null)
+                {
+                    throw new InvalidOperationException("SOLIDWORKS 没有创建草图轮廓。");
                 }
             }
             finally
             {
                 ReleaseComObject(activeSketch);
 
-                if (sketchOpened)
+                if (shouldExitSketch)
                 {
                     sketchManager.InsertSketch(true);
                 }
@@ -403,15 +440,16 @@ namespace Text2Cad.Addin.Commands
             }
         }
 
-        private static void TryZoomToFit(IModelDoc2 document)
+        private static void TryShowResult(IModelDoc2 document)
         {
             try
             {
+                document.ShowNamedView2(string.Empty, (int)swStandardViews_e.swIsometricView);
                 document.ViewZoomtofit2();
             }
             catch (COMException exception)
             {
-                AddinLog.Error("Test plate was created, but zoom-to-fit failed.", exception);
+                AddinLog.Error("Geometry was created, but the result view could not be adjusted.", exception);
             }
         }
 
@@ -420,11 +458,11 @@ namespace Text2Cad.Addin.Commands
             try
             {
                 _solidWorks.CloseDoc(documentTitle);
-                AddinLog.Info($"Closed incomplete test document '{documentTitle}'.");
+                AddinLog.Info($"Closed incomplete generated document '{documentTitle}'.");
             }
             catch (Exception cleanupException)
             {
-                AddinLog.Error($"Could not close incomplete test document '{documentTitle}'.", cleanupException);
+                AddinLog.Error($"Could not close incomplete generated document '{documentTitle}'.", cleanupException);
             }
         }
 
