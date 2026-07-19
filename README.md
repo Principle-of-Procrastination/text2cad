@@ -94,6 +94,7 @@ Text2Cad.sln                                   当前新实现 Solution
 text2cad_mvp_spec.md                           2026 MVP 技术规格
 text2cad_product_plan.html                     2026 产品执行计划（单页）
 text2cad_validation_guide.html                 2026 M0/M1 真机验证指南（单页）
+text2cad_cross_app_execution_plan.md           后续跨 App 架构与执行规划
 src/Text2Cad.Addin/                            M0/M1 进程内 Add-in、对话 Task Pane 与基础几何命令
 tests/Text2Cad.Addin.SmokeTests/                无许可证时可运行的路由与尺寸契约检查
 scripts/Register-Text2CadAddin.cmd             开发机注册脚本
@@ -142,6 +143,12 @@ research/
 当前 Panel 已具备最小完整对话体验：文字输入、Enter 发送、消息记录、执行中状态、成功/失败反馈和三个示例入口。`ChatCommandRouter` 只做确定性关键词匹配，不接 LLM；三个能力分别创建 `100 × 60 × 10 mm` 测试板、`40 × 40 × 40 mm` 方块和 `Ø40 × 60 mm` 圆柱。每次命令都基于模板新建独立 Part，不会回退到当前已有文档；失败时只关闭本次新建的半成品。实现与排错细节见 [`src/Text2Cad.Addin/README.md`](src/Text2Cad.Addin/README.md)。
 
 2026-07-17 已在本机 SOLIDWORKS 2026 SP3.2 真机验证：启用自动加载时 Add-in 可正常显示 Text2CAD Task Pane；测试板、方块和圆柱分别新建独立 `swDocPART`，均包含 1 个实体和对应的原生拉伸特征。为避免启动崩溃循环，当前首次注册默认采用手动加载。Debug/Release 构建与两个配置的 52 项 smoke checks 全部通过。这仍是 API 连通性夹具，不等同于完整的 Execution Plan、Undo/恢复或 AI Planner。
+
+### 当前状态快照
+
+下图展示了 Text2CAD 在 SOLIDWORKS 2026 SP3.2 中的当前界面，以及通过对话创建的 `Ø40 × 60 mm` 原生圆柱特征：
+
+![Text2CAD 在 SOLIDWORKS 2026 中通过对话创建原生圆柱特征](./solidworks_snapshot.png)
 
 历史上 2026-07-14 曾在 SOLIDWORKS 2025 SP0.0 完成测试板 API 探针，但 SOLIDWORKS 2025 不再属于 MVP 支持范围。2026-07-15 因许可证过期记录的三条对话回归 `BLOCKED` 状态，已由上述 2026 SP3.2 回归解除。
 
