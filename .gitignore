@@ -28,3 +28,4 @@ src/SwCopilot/third-party/*.dll
 # OS junk
 .DS_Store
 Thumbs.db
+/debug.log

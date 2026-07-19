@@ -213,7 +213,7 @@ namespace Text2Cad.Addin.Commands
 
         private string? FindInstalledPartTemplate()
         {
-            int productYear = 2025;
+            int productYear = 2026;
             string revision = _solidWorks.RevisionNumber();
             string[] revisionParts = revision.Split('.');
             if (revisionParts.Length > 0 &&

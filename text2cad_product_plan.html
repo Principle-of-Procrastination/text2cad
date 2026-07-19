@@ -228,11 +228,11 @@
   <main class="shell">
     <div class="hero">
       <section class="hero-main">
-        <div class="eyebrow">Product execution plan · reset 2026-07-13</div>
+        <div class="eyebrow">Product execution plan · updated 2026-07-19</div>
         <h1>让 AI 安全地修改原生 CAD，而不是只生成一个形状</h1>
         <p class="lead">Text2CAD 把用户意图和 SOLIDWORKS 上下文编译成受控 Execution Plan。用户预览并确认后，本地确定性执行器才修改原生、可继续编辑的特征树。</p>
         <div class="chips">
-          <span class="chip">SOLIDWORKS 2025–2026</span>
+          <span class="chip">SOLIDWORKS 2026</span>
           <span class="chip">Visual Studio 2026</span>
           <span class="chip">.NET Framework 4.8 Add-in</span>
           <span class="chip">.NET 10 LTS Host</span>
@@ -243,8 +243,8 @@
       <aside class="hero-side">
         <div>
           <div class="status-title">当前状态</div>
-          <div class="status-big">从零重建<br>架构基线已确定</div>
-          <span class="tag green">Research → M0</span>
+          <div class="status-big">SW2026 Add-in 探针已跑通<br>M0 底座待完善</div>
+          <span class="tag green">M0 foundation in progress</span>
         </div>
         <div>
           <div class="fact"><b>旧代码</b><span>仅作预研证据，不作为新实现基础</span></div>
@@ -261,8 +261,8 @@
       </div>
       <div class="baseline">
         <div class="card"><div class="metric">Windows 11</div><div class="metric-label">唯一开发与真机验证平台 · x64</div></div>
-        <div class="card"><div class="metric">SW 2025+</div><div class="metric-label">2025 最低基线 · 2026 兼容回归</div></div>
-        <div class="card"><div class="metric">.NET 4.8</div><div class="metric-label">薄 Add-in · 两代共同目标</div></div>
+        <div class="card"><div class="metric">SW 2026</div><div class="metric-label">MVP 唯一支持版本</div></div>
+        <div class="card"><div class="metric">.NET 4.8</div><div class="metric-label">SOLIDWORKS 2026 进程内 Add-in</div></div>
         <div class="card"><div class="metric">.NET 10 LTS</div><div class="metric-label">Host · Planner、AI 与产品逻辑</div></div>
       </div>
     </section>
@@ -341,7 +341,7 @@
         <article class="phase"><div class="phase-id">M1</div><div><h3>确定性 CAD 闭环</h3><p>手写 IR 创建原生板/孔并增量改尺寸；具备 preview、confirm、revision、Undo 和 postcondition。</p></div><div class="gate">Gate：保存重开仍可编辑</div></article>
         <article class="phase"><div class="phase-id">M2</div><div><h3>规则 Planner</h3><p>模板化覆盖一组窄意图，完善单位、缺参、澄清、不支持与边界策略。</p></div><div class="gate">Gate：golden cases 可重复</div></article>
         <article class="phase"><div class="phase-id">M3</div><div><h3>LLM Planner</h3><p>结构化输出、provider adapter、shadow mode 与 prompt 回归；只开放低风险 capability。</p></div><div class="gate">Gate：离线评测达标</div></article>
-        <article class="phase"><div class="phase-id">M4</div><div><h3>产品化</h3><p>场景聚焦、兼容矩阵、签名安装、更新、审计、企业数据策略与故障恢复。</p></div><div class="gate">Gate：用户价值与交付成立</div></article>
+        <article class="phase"><div class="phase-id">M4</div><div><h3>产品化</h3><p>场景聚焦、签名安装、更新、审计、企业数据策略与故障恢复。</p></div><div class="gate">Gate：用户价值与交付成立</div></article>
       </div>
     </section>
 
@@ -364,7 +364,7 @@
         <div><div class="kicker">07 · Risks</div><h2>核心风险</h2></div>
       </div>
       <div class="risks">
-        <article class="card risk"><h3>SOLIDWORKS API 与拓扑脆弱性</h3><p>用持久引用、类型/拓扑预期、真机 golden models 和版本矩阵控制；不依赖显示名称。</p></article>
+        <article class="card risk"><h3>SOLIDWORKS API 与拓扑脆弱性</h3><p>用持久引用、类型/拓扑预期、SOLIDWORKS 2026 真机 golden models 和 service pack 证据控制；不依赖显示名称。</p></article>
         <article class="card risk"><h3>把演示误当产品</h3><p>板和孔只是工程 fixture；首个市场工作流必须经用户访谈、频率、风险和付费意愿验证。</p></article>
         <article class="card risk"><h3>LLM 幻觉越过安全边界</h3><p>模型无执行权；双层 validator、capability registry、显式单位和模糊测试构成硬边界。</p></article>
         <article class="card risk"><h3>过早扩展范围</h3><p>在 Part 的窄 capability 闭环稳定前，不承诺通用装配体、工程图、多 CAD 或全自动拓扑推理。</p></article>
@@ -375,12 +375,11 @@
       <h2>立即下一步</h2>
       <p>当前阶段只推进能够降低架构风险和验证用户价值的工作。</p>
       <ol>
-        <li>准备 Windows 11、SOLIDWORKS 2025 API SDK、SOLIDWORKS 2026 兼容环境与 Visual Studio 2026。</li>
-        <li>把旧实现移入 <code>research/legacy</code>，创建全新 Solution。</li>
-        <li>完成最薄 <code>ISwAddin</code>、Task Pane 和安全卸载。</li>
+        <li>稳定现有 SOLIDWORKS 2026-only Add-in 基线，持续回归加载、卸载、Task Pane 布局和三条确定性建模命令。</li>
         <li>建立 .NET 10 Host 与 Named Pipe 协议握手。</li>
         <li>定义 Snapshot、ExecutionPlan、Result 的 v1 schema。</li>
-        <li>用手写计划完成 M1 golden fixture 和失败恢复。</li>
+        <li>建立 capability registry、双层校验和 COM Dispatcher 边界。</li>
+        <li>把现有建模探针扩展为带 preview、confirm、revision、Undo 和失败恢复的 M1 golden fixture。</li>
         <li>建立真机验证记录与回归语料格式。</li>
         <li>同步访谈目标用户，选择首个真实工作流。</li>
       </ol>
@@ -390,9 +389,8 @@
       <div class="kicker">Official sources</div>
       <h2>当前基线依据</h2>
       <ul>
-        <li><a href="https://help.solidworks.com/2025/english/api/sldworksapiprogguide/welcome.htm">SOLIDWORKS 2025 API Help</a></li>
         <li><a href="https://help.solidworks.com/2026/english/api/sldworksapiprogguide/welcome.htm">SOLIDWORKS 2026 API Help</a></li>
-        <li><a href="https://help.solidworks.com/2025/english/api/sldworksapiprogguide/GettingStarted/Visual_C__Standalone_and_Add-in_Applications.htm">Visual C# Standalone and Add-in Applications</a></li>
+        <li><a href="https://help.solidworks.com/2026/english/api/sldworksapiprogguide/GettingStarted/Visual_C__Standalone_and_Add-in_Applications.htm">Visual C# Standalone and Add-in Applications</a></li>
         <li><a href="https://www.solidworks.com/support/system-requirements">SOLIDWORKS System Requirements</a></li>
         <li><a href="https://learn.microsoft.com/en-us/visualstudio/releases/2026/compatibility">Visual Studio 2026 Compatibility</a></li>
         <li><a href="https://dotnet.microsoft.com/en-us/platform/support/policy">.NET Support Policy</a></li>
@@ -400,6 +398,6 @@
     </section>
   </main>
 
-  <footer>Text2CAD 2026 产品执行计划 · 更新于 2026-07-13 · 旧 SwCopilot 实现不再作为产品基线</footer>
+  <footer>Text2CAD 2026 产品执行计划 · 更新于 2026-07-19 · 旧 SwCopilot 实现不再作为产品基线</footer>
 </body>
 </html>

@@ -52,6 +52,7 @@ namespace Text2Cad.Addin
                 _taskPaneControl.FitToHost();
 
                 _taskPaneView.ShowView();
+                _taskPaneControl.StartMonitoring();
                 AddinLog.Info("Text2CAD Add-in connected and Task Pane created.");
                 return true;
             }
@@ -103,7 +104,10 @@ namespace Text2Cad.Addin
             using RegistryKey currentUser = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
             using RegistryKey startupKey = currentUser.CreateSubKey(startupPath, true)
                 ?? throw new InvalidOperationException($"Cannot create HKCU\\{startupPath}.");
-            startupKey.SetValue(null, 1, RegistryValueKind.DWord);
+            if (startupKey.GetValue(null) == null)
+            {
+                startupKey.SetValue(null, 0, RegistryValueKind.DWord);
+            }
 
             AddinLog.Info($"Registered Text2CAD Add-in {guid}.");
         }
@@ -133,6 +137,20 @@ namespace Text2Cad.Addin
         {
             TaskpaneView? taskPaneView = _taskPaneView;
             _taskPaneView = null;
+            TaskPaneControl? taskPaneControl = _taskPaneControl;
+            _taskPaneControl = null;
+
+            if (taskPaneControl != null)
+            {
+                try
+                {
+                    taskPaneControl.BeginShutdown();
+                }
+                catch (Exception exception)
+                {
+                    AddinLog.Error("Text2CAD Task Pane could not enter shutdown mode.", exception);
+                }
+            }
 
             if (taskPaneView != null)
             {
@@ -140,17 +158,37 @@ namespace Text2Cad.Addin
                 {
                     taskPaneView.DeleteView();
                 }
+                catch (Exception exception)
+                {
+                    AddinLog.Error("SOLIDWORKS could not delete the Text2CAD Task Pane view.", exception);
+                }
                 finally
                 {
-                    if (Marshal.IsComObject(taskPaneView))
+                    try
                     {
-                        Marshal.ReleaseComObject(taskPaneView);
+                        if (Marshal.IsComObject(taskPaneView))
+                        {
+                            Marshal.ReleaseComObject(taskPaneView);
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        AddinLog.Error("SOLIDWORKS Task Pane COM wrapper could not be released.", exception);
                     }
                 }
             }
 
-            _taskPaneControl?.Dispose();
-            _taskPaneControl = null;
+            if (taskPaneControl != null)
+            {
+                try
+                {
+                    taskPaneControl.Dispose();
+                }
+                catch (Exception exception)
+                {
+                    AddinLog.Error("Text2CAD Task Pane control could not be disposed.", exception);
+                }
+            }
         }
     }
 }

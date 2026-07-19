@@ -29,13 +29,13 @@ Rebuild + 后置条件验证 + 成功提交 / 失败恢复
 | 层 | 基线 | 职责 |
 |---|---|---|
 | 开发环境 | Windows 11 x64 + Visual Studio Community 2026 | 构建、调试和真机验证 |
-| CAD 宿主 | SOLIDWORKS 2025（最低基线）/ 2026（兼容验证）+ SOLIDWORKS API SDK | 文档、选择、原生特征树和 COM API |
+| CAD 宿主 | SOLIDWORKS 2026 x64 + 同版本 SOLIDWORKS API SDK/PIA | 文档、选择、原生特征树和 COM API |
 | 进程内 Add-in | C# + .NET Framework 4.8 + x64 | `ISwAddin`、Task Pane、上下文快照、COM 调度、安全执行 |
 | 进程外 Host | C# + .NET 10 LTS + x64 | LLM、Planner、会话、策略、日志和协议编排 |
 | 进程通信 | 本机 Named Pipe + 版本化 DTO | 只传数据，不传 COM 对象、RCW、指针或可执行代码 |
 | UI | WinForms/WPF 外壳；需要时嵌入 WebView2 | 计划预览、确认、进度、错误与恢复 |
 
-SOLIDWORKS 2025 和 2026 的官方 C# Add-in 路径仍以 .NET Framework PIA、COM、`ISwAddin` 和 `RegAsm` 为基础。2025 的运行时基线是 .NET Framework 4.8；4.8 程序集可以运行在 2026 使用的 4.8.1 运行时上，因此进程内层以 .NET Framework 4.8 作为共同目标，并只依赖 SOLIDWORKS 2025 已提供的 API 表面。快速演进的 AI 和产品逻辑放在 .NET 10 Host 中，避免把网络、模型依赖和额外运行时风险注入 `SLDWORKS.exe`。
+MVP 只支持 SOLIDWORKS 2026 x64。其官方 C# Add-in 路径仍以 .NET Framework PIA、COM、`ISwAddin` 和 `RegAsm` 为基础；进程内 Add-in 保持 .NET Framework 4.8 目标，并直接使用本机 SOLIDWORKS 2026 的同版本 PIA。快速演进的 AI 和产品逻辑放在 .NET 10 Host 中，避免把网络、模型依赖和额外运行时风险注入 `SLDWORKS.exe`。
 
 ## 核心边界
 
@@ -83,7 +83,7 @@ SOLIDWORKS 2025 和 2026 的官方 C# Add-in 路径仍以 .NET Framework PIA、C
 ### M4：产品化
 
 - 用户研究决定首个高价值工作流。
-- 建立受支持的 SOLIDWORKS 版本矩阵和 golden model 真机回归。
+- 建立 SOLIDWORKS 2026 golden model 真机回归。
 - 完善签名安装、更新、审计、企业数据策略和故障恢复。
 
 ## 当前仓库
@@ -123,10 +123,10 @@ research/
 ## 开发机准备
 
 1. Windows 11 x64。
-2. SOLIDWORKS 2025，包含 API SDK，并完成授权；另准备 SOLIDWORKS 2026 环境做兼容性回归。
+2. SOLIDWORKS 2026 x64，包含 API SDK，并完成授权。
 3. Visual Studio Community 2026，安装 `.NET 桌面开发` workload。
 4. 确认安装 `.NET Framework 4.8 SDK/Targeting Pack` 与 `.NET 10 SDK`。
-5. 以 SOLIDWORKS 2025 API SDK/PIA 作为最低 API 基线；在 2026 真机回归中记录并验证实际 Interop 来源和版本。不要混用来历不明的 DLL，也不要提交厂商 DLL。
+5. 使用当前 SOLIDWORKS 2026 安装目录中的同版本 API SDK/PIA，并在真机回归中记录 Interop 来源、SOLIDWORKS service pack 和文件版本。不要混用来历不明的 DLL，也不要提交厂商 DLL。
 6. 所有几何集成测试都在专用测试零件和测试配置上运行，不在重要生产模型上试验。
 
 ## M0/M1 Panel 构建与真机加载
@@ -134,16 +134,16 @@ research/
 1. 在 Visual Studio 中打开 `Text2Cad.sln`，选择 `Debug | x64` 并构建。
 2. 保存工作并关闭 SOLIDWORKS。
 3. 在管理员命令提示符中运行 `scripts\Register-Text2CadAddin.cmd`。
-4. 正常启动 SOLIDWORKS；注册脚本会把 Text2CAD 配置为随 SOLIDWORKS 自动加载。如未出现，可在 `工具 > 插件` 中勾选 `Text2CAD`。
+4. 正常启动 SOLIDWORKS，在 `工具 > 插件` 中手动勾选 `Text2CAD`。首次注册时默认不启用随 SOLIDWORKS 自动加载；后续使用注册脚本更新时保留用户现有设置，不会强制开启启动加载。稳定后可自行勾选启动列。
 5. 确认右侧 Task Pane 显示连接状态、当前文档、对话记录、文字输入框和三个固定能力入口。
 6. 输入并发送 `创建一个 100 × 60 × 10 mm 测试板`，确认出现新的未保存零件，特征树包含 `Text2CAD_TestPlate_Sketch` 和 `Text2CAD_TestPlate_100x60x10`。
 7. 分别发送 `创建一个边长 40 mm 的方块` 和 `创建一个直径 40 mm、高 60 mm 的圆柱`，确认各自新建独立 Part，并收到成功消息。
 
 当前 Panel 已具备最小完整对话体验：文字输入、Enter 发送、消息记录、执行中状态、成功/失败反馈和三个示例入口。`ChatCommandRouter` 只做确定性关键词匹配，不接 LLM；三个能力分别创建 `100 × 60 × 10 mm` 测试板、`40 × 40 × 40 mm` 方块和 `Ø40 × 60 mm` 圆柱。每次命令都基于模板新建独立 Part，不会回退到当前已有文档；失败时只关闭本次新建的半成品。实现与排错细节见 [`src/Text2Cad.Addin/README.md`](src/Text2Cad.Addin/README.md)。
 
-2026-07-14 已在本机 SOLIDWORKS 2025 SP0.0 真机验证：活动文档为新建 `swDocPART`，草图编辑状态已退出，特征类型为 `ProfileFeature` 和 `Extrusion`，包含 1 个实体，实体包围盒为精确的 `100 × 60 × 10 mm`。这仍是 API 连通性夹具，不等同于完整的 Execution Plan、Undo/恢复或 AI Planner。
+2026-07-17 已在本机 SOLIDWORKS 2026 SP3.2 真机验证：启用自动加载时 Add-in 可正常显示 Text2CAD Task Pane；测试板、方块和圆柱分别新建独立 `swDocPART`，均包含 1 个实体和对应的原生拉伸特征。为避免启动崩溃循环，当前首次注册默认采用手动加载。Debug/Release 构建与两个配置的 52 项 smoke checks 全部通过。这仍是 API 连通性夹具，不等同于完整的 Execution Plan、Undo/恢复或 AI Planner。
 
-2026-07-15 对话层、三能力路由和通用基础几何命令已完成 Debug/Release 构建；离线 smoke-test 的 52 项路由、尺寸与特征名检查全部通过。由于本机 SOLIDWORKS 许可证已过期，三条新对话的真机回归当前为 `BLOCKED`，许可证恢复后再按上面的步骤执行并记录。
+历史上 2026-07-14 曾在 SOLIDWORKS 2025 SP0.0 完成测试板 API 探针，但 SOLIDWORKS 2025 不再属于 MVP 支持范围。2026-07-15 因许可证过期记录的三条对话回归 `BLOCKED` 状态，已由上述 2026 SP3.2 回归解除。
 
 无有效 SOLIDWORKS 许可证时，构建 Solution 后仍可运行：
 
@@ -160,8 +160,7 @@ research/
 - [Visual Studio 2026 下载](https://visualstudio.microsoft.com/downloads/)
 - [Visual Studio 2026 平台兼容性](https://learn.microsoft.com/en-us/visualstudio/releases/2026/compatibility)
 - [SOLIDWORKS 系统要求](https://www.solidworks.com/support/system-requirements)
-- [SOLIDWORKS 2025 API Help](https://help.solidworks.com/2025/english/api/sldworksapiprogguide/welcome.htm)
 - [SOLIDWORKS 2026 API Help](https://help.solidworks.com/2026/english/api/sldworksapiprogguide/welcome.htm)
-- [SOLIDWORKS C# Add-in 开发入口](https://help.solidworks.com/2025/english/api/sldworksapiprogguide/GettingStarted/Visual_C__Standalone_and_Add-in_Applications.htm)
+- [SOLIDWORKS C# Add-in 开发入口](https://help.solidworks.com/2026/english/api/sldworksapiprogguide/GettingStarted/Visual_C__Standalone_and_Add-in_Applications.htm)
 - [.NET Framework 版本兼容性](https://learn.microsoft.com/en-us/dotnet/framework/migration-guide/version-compatibility)
 - [.NET 版本支持策略](https://dotnet.microsoft.com/en-us/platform/support/policy)

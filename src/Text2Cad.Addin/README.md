@@ -34,44 +34,45 @@ SOLIDWORKS API 长度统一使用米。基准面通过内部特征类型 `RefPla
 
 在 Visual Studio 2026 中打开根目录的 `Text2Cad.sln`，选择 `Debug | x64` 后构建。
 
-项目从以下注册表位置自动读取 SOLIDWORKS 2025 安装目录：
+项目从以下注册表位置自动读取 SOLIDWORKS 2026 安装目录：
 
 ```text
-HKLM\SOFTWARE\SolidWorks\SOLIDWORKS 2025\Setup
+HKLM\SOFTWARE\SolidWorks\SOLIDWORKS 2026\Setup
   SolidWorks Folder
 ```
 
-如需覆盖，可向 MSBuild 传入 `SolidWorksInstallDir`。
+MVP 只支持 SOLIDWORKS 2026，并使用其同版本 PIA。路径拼接不依赖注册表值是否带末尾反斜杠。如需覆盖，可向 MSBuild 传入 `SolidWorksInstallDir`。
 
 ## 注册与验证
 
 1. 关闭 SOLIDWORKS。
 2. 以管理员身份打开命令提示符。
 3. 运行 `scripts\Register-Text2CadAddin.cmd`。
-4. 正常启动 SOLIDWORKS；Text2CAD 默认随 SOLIDWORKS 自动加载。必要时打开 `工具 > 插件` 手动勾选。
+4. 正常启动 SOLIDWORKS，在 `工具 > 插件` 中手动勾选 `Text2CAD`。首次注册时默认不启用自动加载；后续使用注册脚本更新时保留用户现有设置，不会强制打开启动加载。
 5. 确认右侧 Task Pane 出现 Text2CAD 标签，并显示对话记录、输入框和三个示例按钮。
 6. 输入 `创建一个 100 × 60 × 10 mm 测试板` 后按 Enter；成功时应新建一个零件并显示绿色成功消息。
 7. 分别发送 `创建一个边长 40 mm 的方块` 和 `创建一个直径 40 mm、高 60 mm 的圆柱`；每条消息都应新建独立 Part，并生成原生草图和拉伸特征。
 8. 输入 `做一个球`，确认 Panel 只列出当前支持能力且不创建文档。
 
-## 2025 真机验收记录
+## 2026 真机验收记录
 
-2026-07-14 在 SOLIDWORKS 2025 SP0.0 验证通过：
+2026-07-17 在 SOLIDWORKS 2026 SP3.2 验证通过：
 
-- 新建文档：`零件1`，类型 `swDocPART`；
-- 草图编辑状态：已退出；
-- 原生特征：`Text2CAD_TestPlate_Sketch | ProfileFeature`；
-- 原生特征：`Text2CAD_TestPlate_100x60x10 | Extrusion`；
-- 可见实体：1；
-- 实体包围盒：`100 × 60 × 10 mm`；
-- 构建结果：0 个警告、0 个错误。
+- 启用自动加载时 Add-in 可正常启动，Text2CAD Task Pane 正常显示；当前首次注册默认采用手动加载；
+- 测试板：`Text2CAD_TestPlate_100x60x10`，实体数 1；
+- 方块：`Text2CAD_Cube_40x40x40`，实体数 1；
+- 圆柱：`Text2CAD_Cylinder_D40x60`，实体数 1；
+- 三条命令均返回执行成功，结果为原生草图与拉伸特征；
+- Debug/Release 构建与两个配置的 52 项 smoke checks 均通过。
 
-2026-07-15 已完成：
+历史上 2026-07-14 曾在 SOLIDWORKS 2025 SP0.0 完成测试板 API 探针，但 SOLIDWORKS 2025 不再属于 MVP 支持范围。
+
+2026-07-15 已完成的初始实现：
 
 - 对话 UI 和固定三能力路由实现；
 - 无 NuGet/PIA 运行依赖的 smoke-test 项目；
 - 52 项路由、米制尺寸和特征名契约检查在 Debug/Release 下通过；
 - `Debug | x64` 与 `Release | x64` 编译通过；
-- 本机 SOLIDWORKS 许可证已过期，三条新对话的真机回归当前为 `BLOCKED`。
+- 当时三条新对话的真机回归因许可证过期而 `BLOCKED`；该阻塞已由上面的 2026 SP3.2 回归解除。
 
 卸载时关闭 SOLIDWORKS，并在管理员命令提示符中运行 `scripts\Unregister-Text2CadAddin.cmd`。

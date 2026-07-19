@@ -15,8 +15,8 @@
     <Version>0.1.0</Version>
     <Authors>Text2CAD</Authors>
     <Description>Text2CAD SOLIDWORKS in-process add-in.</Description>
-    <SolidWorksInstallDir Condition="'$(SolidWorksInstallDir)' == ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\SolidWorks\SOLIDWORKS 2025\Setup', 'SolidWorks Folder', '', Microsoft.Win32.RegistryView.Registry64))</SolidWorksInstallDir>
-    <SolidWorksApiRedistDir>$(SolidWorksInstallDir)api\redist</SolidWorksApiRedistDir>
+    <SolidWorksInstallDir Condition="'$(SolidWorksInstallDir)' == ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\SolidWorks\SOLIDWORKS 2026\Setup', 'SolidWorks Folder', '', Microsoft.Win32.RegistryView.Registry64))</SolidWorksInstallDir>
+    <SolidWorksApiRedistDir Condition="'$(SolidWorksInstallDir)' != ''">$([System.IO.Path]::Combine('$(SolidWorksInstallDir)', 'api\redist'))</SolidWorksApiRedistDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <Target Name="ValidateSolidWorksReferences" BeforeTargets="ResolveAssemblyReferences">
-    <Error Condition="'$(SolidWorksInstallDir)' == ''" Text="SOLIDWORKS 2025 was not found. Set the SolidWorksInstallDir MSBuild property." />
-    <Error Condition="!Exists('$(SolidWorksApiRedistDir)\SolidWorks.Interop.sldworks.dll')" Text="SOLIDWORKS 2025 PIA files were not found under '$(SolidWorksApiRedistDir)'." />
+    <Error Condition="'$(SolidWorksInstallDir)' == ''" Text="SOLIDWORKS 2026 was not found. Set the SolidWorksInstallDir MSBuild property." />
+    <Error Condition="!Exists('$(SolidWorksApiRedistDir)\SolidWorks.Interop.sldworks.dll')" Text="SOLIDWORKS PIA files were not found under '$(SolidWorksApiRedistDir)'." />
   </Target>
 </Project>
